@@ -1,0 +1,1 @@
+enum AppRole { lecturer, student }

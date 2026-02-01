@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../app_settings.dart';
+import '../../data/mock_data.dart';
 import '../../l10n/app_texts.dart';
+import '../../models/exam_brief.dart';
 import '../../widgets/evalis_app_bar.dart';
 
 class LecturerCreateMcqScreen extends StatefulWidget {
@@ -19,6 +21,7 @@ class _LecturerCreateMcqScreenState extends State<LecturerCreateMcqScreen> {
   final List<TextEditingController> _optionControllers =
       List.generate(4, (_) => TextEditingController());
   int _correctIndex = 0;
+  ExamBrief _selectedExam = mockExams.first;
 
   @override
   void dispose() {
@@ -43,6 +46,23 @@ class _LecturerCreateMcqScreenState extends State<LecturerCreateMcqScreen> {
             Text(
               context.t(AppText.createMcqSubtitle),
               style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 12),
+            DropdownMenu<ExamBrief>(
+              initialSelection: _selectedExam,
+              label: Text(context.t(AppText.examPickerLabel)),
+              dropdownMenuEntries: mockExams
+                  .map(
+                    (exam) => DropdownMenuEntry<ExamBrief>(
+                      value: exam,
+                      label: '${exam.title} • ${exam.window}',
+                    ),
+                  )
+                  .toList(),
+              onSelected: (value) {
+                if (value == null) return;
+                setState(() => _selectedExam = value);
+              },
             ),
             const SizedBox(height: 16),
             TextField(

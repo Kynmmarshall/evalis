@@ -24,13 +24,12 @@ class AppTheme {
         secondary: secondary,
         tertiary: accent,
         surface: Colors.white,
-        background: mutedSurface,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: Color(0xFF1F2937),
       ),
       scaffoldBackgroundColor: mutedSurface,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         color: Colors.white,
@@ -74,13 +73,12 @@ class AppTheme {
         secondary: primary,
         tertiary: accent,
         surface: Color(0xFF111827),
-        background: deepSpace,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: Color(0xFFE5E7EB),
       ),
       scaffoldBackgroundColor: deepSpace,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         color: const Color(0xFF1F2937),

@@ -22,8 +22,8 @@ class AppSettings extends ChangeNotifier {
 }
 
 class AppSettingsScope extends InheritedNotifier<AppSettings> {
-  const AppSettingsScope({required AppSettings settings, required Widget child, super.key})
-      : super(notifier: settings, child: child);
+  const AppSettingsScope({required AppSettings settings, required super.child, super.key})
+      : super(notifier: settings);
 
   static AppSettings of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AppSettingsScope>();

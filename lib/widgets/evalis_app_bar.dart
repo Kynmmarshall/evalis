@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../app_settings.dart';
 import 'language_menu_button.dart';
 import 'theme_toggle_button.dart';
 

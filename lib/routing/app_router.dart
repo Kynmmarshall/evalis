@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
 
+import '../screens/auth/login_screen.dart';
+import '../screens/auth/registration_screen.dart';
 import '../screens/landing/landing_screen.dart';
+import '../screens/lecturer/lecturer_approvals_screen.dart';
 import '../screens/lecturer/lecturer_create_mcq_screen.dart';
 import '../screens/lecturer/lecturer_dashboard_screen.dart';
+import '../screens/lecturer/lecturer_profile_screen.dart';
 import '../screens/lecturer/lecturer_resources_screen.dart';
 import '../screens/lecturer/lecturer_results_screen.dart';
+import '../screens/startup/splash_screen.dart';
+import '../screens/student/student_courses_screen.dart';
 import '../screens/student/student_dashboard_screen.dart';
 import '../screens/student/student_exam_screen.dart';
 import '../screens/student/student_feedback_screen.dart';
 import '../screens/student/student_materials_screen.dart';
+import '../screens/student/student_profile_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     Widget page;
     switch (settings.name) {
+      case SplashScreen.routeName:
+        page = const SplashScreen();
+        break;
+      case LoginScreen.routeName:
+        page = const LoginScreen();
+        break;
+      case RegistrationScreen.routeName:
+        page = const RegistrationScreen();
+        break;
       case LandingScreen.routeName:
         page = const LandingScreen();
         break;
@@ -29,6 +45,12 @@ class AppRouter {
       case LecturerResourcesScreen.routeName:
         page = const LecturerResourcesScreen();
         break;
+      case LecturerProfileScreen.routeName:
+        page = const LecturerProfileScreen();
+        break;
+      case LecturerApprovalsScreen.routeName:
+        page = LecturerApprovalsScreen();
+        break;
       case StudentDashboardScreen.routeName:
         page = const StudentDashboardScreen();
         break;
@@ -41,8 +63,14 @@ class AppRouter {
       case StudentMaterialsScreen.routeName:
         page = const StudentMaterialsScreen();
         break;
+      case StudentCoursesScreen.routeName:
+        page = StudentCoursesScreen();
+        break;
+      case StudentProfileScreen.routeName:
+        page = const StudentProfileScreen();
+        break;
       default:
-        page = const LandingScreen();
+        page = const SplashScreen();
     }
 
     return MaterialPageRoute(builder: (_) => page, settings: settings);

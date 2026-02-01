@@ -5,6 +5,8 @@ import '../../l10n/app_texts.dart';
 import '../../theme.dart';
 import '../../widgets/language_menu_button.dart';
 import '../../widgets/theme_toggle_button.dart';
+import '../auth/login_screen.dart';
+import '../auth/registration_screen.dart';
 import '../lecturer/lecturer_dashboard_screen.dart';
 import '../student/student_dashboard_screen.dart';
 
@@ -28,6 +30,20 @@ class LandingScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: const [ThemeToggleButton(), SizedBox(width: 8), LanguageMenuButton()],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, LoginScreen.routeName),
+                      child: Text(context.t(AppText.loginButton)),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, RegistrationScreen.routeName),
+                      child: Text(context.t(AppText.registerLink)),
+                    ),
+                  ],
                 ),
                 const Spacer(),
                 Text(
