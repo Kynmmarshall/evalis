@@ -75,7 +75,6 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
           final question = mockQuestions[index - 1];
           final answer = _answers[index - 1];
           final isLocked = answer != null;
-          final isCorrect = answer == question.correctIndex;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
@@ -138,8 +137,7 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color:
-                              (isCorrect ? colorScheme.secondary : colorScheme.tertiary).withValues(alpha: 0.08),
+                          color: colorScheme.secondary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -147,10 +145,7 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(
-                                  isCorrect ? Icons.verified_rounded : Icons.tips_and_updates_rounded,
-                                  color: isCorrect ? colorScheme.secondary : colorScheme.tertiary,
-                                ),
+                                Icon(Icons.lock_clock_rounded, color: colorScheme.secondary),
                                 const SizedBox(width: 8),
                                 Text(
                                   context.t(AppText.responseLocked),
@@ -162,17 +157,7 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              isCorrect
-                                  ? context.t(AppText.responseCorrect)
-                                  : context.t(AppText.responseIncorrect),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              question.tip,
-                              style:
-                                  Theme.of(context).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-                            ),
+                            Text(context.t(AppText.responseReviewLater)),
                           ],
                         ),
                       ),

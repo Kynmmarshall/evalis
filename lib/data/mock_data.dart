@@ -2,7 +2,6 @@ import '../models/course_enrollment.dart';
 import '../models/course_info.dart';
 import '../models/enrollment_request.dart';
 import '../models/exam_brief.dart';
-import '../models/feedback_entry.dart';
 import '../models/learning_resource.dart';
 import '../models/mock_question.dart';
 import '../models/past_material.dart';
@@ -103,27 +102,6 @@ const mockQuestions = [
     ],
     correctIndex: 1,
     tip: 'Centralizing materials gives equal access and analytics for lecturers.',
-  ),
-];
-
-const mockFeedback = [
-  FeedbackEntry(
-    title: 'Adaptive pedagogy fundamentals',
-    status: '+12 pts',
-    detail: 'Great conceptual grounding. Explore case-based nuance next.',
-    isCorrect: true,
-  ),
-  FeedbackEntry(
-    title: 'Assessment analytics',
-    status: 'Review',
-    detail: 'Remember to tie metrics back to teaching decisions.',
-    isCorrect: false,
-  ),
-  FeedbackEntry(
-    title: 'Ethics & fairness',
-    status: '+8 pts',
-    detail: 'Balanced commentary. Cite additional policies to excel.',
-    isCorrect: true,
   ),
 ];
 

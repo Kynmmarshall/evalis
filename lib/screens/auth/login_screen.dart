@@ -114,28 +114,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _continueAsGuest(AppRole.lecturer),
-                      icon: const Icon(Icons.edit_note_rounded),
-                      label: Text(context.t(AppText.guestLecturer)),
-                    ),
-                  ),
-                ],
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _continueAsGuest(AppRole.lecturer),
+                  icon: const Icon(Icons.edit_note_rounded),
+                  label: Text(context.t(AppText.guestLecturer)),
+                ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _continueAsGuest(AppRole.student),
-                      icon: const Icon(Icons.emoji_people_rounded),
-                      label: Text(context.t(AppText.guestStudent)),
-                    ),
-                  ),
-                ],
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _continueAsGuest(AppRole.student),
+                  icon: const Icon(Icons.emoji_people_rounded),
+                  label: Text(context.t(AppText.guestStudent)),
+                ),
               ),
               const SizedBox(height: 24),
               Align(

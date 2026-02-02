@@ -20,12 +20,57 @@ class StudentProfileScreen extends StatelessWidget {
     final pendingCourses = studentEnrollments
         .where((enrollment) => enrollment.status == EnrollmentStatus.pending)
         .toList();
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: EvalisAppBar(title: context.t(AppText.studentProfileTitle)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 36,
+                    backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
+                    child: const Icon(Icons.photo_camera_front_outlined, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.t(AppText.profilePhotoTitle),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.t(AppText.profilePhotoSubtitle),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.tonalIcon(
+                          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(context.t(AppText.prototypeMessage))),
+                          ),
+                          icon: const Icon(Icons.upload_rounded),
+                          label: Text(context.t(AppText.profilePhotoButton)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
