@@ -109,7 +109,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       child: LinearProgressIndicator(
                         minHeight: 6,
                         value: strength,
-                        backgroundColor: colorScheme.surfaceVariant,
+                        backgroundColor: colorScheme.surfaceContainerHighest,
                         valueColor: AlwaysStoppedAnimation<Color>(color),
                       ),
                     ),

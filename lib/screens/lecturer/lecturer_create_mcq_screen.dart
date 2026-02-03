@@ -21,7 +21,9 @@ class _LecturerCreateMcqScreenState extends State<LecturerCreateMcqScreen> {
   final List<TextEditingController> _optionControllers =
       List.generate(4, (_) => TextEditingController());
   int _correctIndex = 0;
-  ExamBrief _selectedExam = mockExams.first;
+  late List<ExamBrief> _exams;
+  late ExamBrief _selectedExam;
+  bool _hasSyncedArgs = false;
 
   @override
   void dispose() {
@@ -31,6 +33,27 @@ class _LecturerCreateMcqScreenState extends State<LecturerCreateMcqScreen> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _exams = List<ExamBrief>.from(mockExams);
+    _selectedExam = _exams.first;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasSyncedArgs) return;
+    _hasSyncedArgs = true;
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is ExamBrief) {
+      if (!_exams.any((exam) => exam.id == args.id)) {
+        _exams.insert(0, args);
+      }
+      _selectedExam = args;
+    }
   }
 
   @override
@@ -51,7 +74,7 @@ class _LecturerCreateMcqScreenState extends State<LecturerCreateMcqScreen> {
             DropdownMenu<ExamBrief>(
               initialSelection: _selectedExam,
               label: Text(context.t(AppText.examPickerLabel)),
-              dropdownMenuEntries: mockExams
+              dropdownMenuEntries: _exams
                   .map(
                     (exam) => DropdownMenuEntry<ExamBrief>(
                       value: exam,

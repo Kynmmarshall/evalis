@@ -7,7 +7,7 @@ import '../../widgets/action_card.dart';
 import '../../widgets/evalis_app_bar.dart';
 import '../../widgets/resource_spotlight.dart';
 import '../lecturer/lecturer_approvals_screen.dart';
-import '../lecturer/lecturer_create_mcq_screen.dart';
+import '../lecturer/lecturer_exam_manager_screen.dart';
 import '../lecturer/lecturer_profile_screen.dart';
 import '../lecturer/lecturer_resources_screen.dart';
 import '../lecturer/lecturer_results_screen.dart';
@@ -25,7 +25,7 @@ class LecturerDashboardScreen extends StatelessWidget {
         subtitle: context.t(AppText.lecturerCardCreateDesc),
         icon: Icons.library_books,
         accent: AppTheme.primary,
-        onTap: () => Navigator.pushNamed(context, LecturerCreateMcqScreen.routeName),
+        onTap: () => Navigator.pushNamed(context, LecturerExamManagerScreen.routeName),
       ),
       ActionCardData(
         title: context.t(AppText.lecturerCardResults),
