@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
 import '../../models/app_role.dart';
+import '../../widgets/language_menu_button.dart';
+import '../../widgets/theme_toggle_button.dart';
 import '../landing/landing_screen.dart';
 import '../lecturer/lecturer_dashboard_screen.dart';
 import '../student/student_dashboard_screen.dart';
@@ -39,6 +41,15 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: const [
+                  ThemeToggleButton(),
+                  SizedBox(width: 8),
+                  LanguageMenuButton(),
+                ],
+              ),
+              const SizedBox(height: 12),
               Text(
                 context.t(AppText.loginTitle),
                 style: Theme.of(context)
