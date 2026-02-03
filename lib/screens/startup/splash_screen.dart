@@ -63,15 +63,19 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
                 const Spacer(),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CircularProgressIndicator(color: colorScheme.secondary),
                     const SizedBox(width: 16),
-                    Text(
-                      context.t(AppText.prototypeMessage),
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: Colors.white70, fontWeight: FontWeight.w600),
+                    Expanded(
+                      child: Text(
+                        context.t(AppText.prototypeMessage),
+                        softWrap: true,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: Colors.white70, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ],
                 ),
