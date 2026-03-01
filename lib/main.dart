@@ -4,10 +4,15 @@ import 'app_settings.dart';
 import 'l10n/app_texts.dart';
 import 'routing/app_router.dart';
 import 'screens/startup/splash_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme.dart';
 
-void main() {
-  runApp(const MainApp());
+Future<void> main() async {
+  await Supabase.initialize(
+    url: 'https://fshklqbpmzqogiixjspe.supabase.co',
+    anonKey: 'sb_publishable_URRjCW_tZ80ismwpuu3YPw_WLhoDjDh',
+  );
+  runApp(MainApp());
 }
 
 class MainApp extends StatefulWidget {
