@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
 import '../../models/app_role.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/language_menu_button.dart';
 import '../../widgets/theme_toggle_button.dart';
 import '../landing/landing_screen.dart';
@@ -23,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   AppRole _selectedRole = AppRole.lecturer;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -74,7 +77,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
                 selected: <AppRole>{_selectedRole},
-                onSelectionChanged: (value) => setState(() => _selectedRole = value.first),
+                onSelectionChanged:
+                    _isSubmitting ? null : (value) => setState(() => _selectedRole = value.first),
               ),
               const SizedBox(height: 20),
               TextField(
@@ -98,15 +102,35 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _handleLogin,
-                  child: Text(context.t(AppText.loginButton)),
+                  onPressed: _isSubmitting ? null : _handleLogin,
+                  child: _isSubmitting
+                      ? SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        )
+                      : Text(context.t(AppText.loginButton)),
                 ),
               ),
               const SizedBox(height: 12),
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
-                  onPressed: () => Navigator.pushNamed(context, RegistrationScreen.routeName),
+                    onPressed: _isSubmitting
+                        ? null
+                        : () async {
+                            final result = await Navigator.pushNamed(
+                              context,
+                              RegistrationScreen.routeName,
+                            );
+                            if (!mounted || result is! AppRole) return;
+                            setState(() => _selectedRole = result);
+                          },
                   child: Text(context.t(AppText.registerLink)),
                 ),
               ),
@@ -158,10 +182,37 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _handleLogin() {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.t(AppText.loginSuccess))));
-    _navigateToRole(_selectedRole);
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showError(context.t(AppText.authMissingCredentials));
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() => _isSubmitting = true);
+    try {
+      final role = await AuthService.instance.signInWithEmail(
+        email: email,
+        password: password,
+        fallbackRole: _selectedRole,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.t(AppText.loginSuccess))));
+      _navigateToRole(role);
+    } on AuthException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError(context.t(AppText.authGenericError));
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   void _continueAsGuest(AppRole role) {
@@ -173,5 +224,15 @@ class _LoginScreenState extends State<LoginScreen> {
         ? LecturerDashboardScreen.routeName
         : StudentDashboardScreen.routeName;
     Navigator.pushReplacementNamed(context, route);
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 }

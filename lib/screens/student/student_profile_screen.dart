@@ -1,32 +1,68 @@
 import 'package:flutter/material.dart';
 
 import '../../app_settings.dart';
-import '../../data/mock_data.dart';
 import '../../l10n/app_texts.dart';
 import '../../models/course_enrollment.dart';
+import '../../services/profile_service.dart';
 import '../../widgets/evalis_app_bar.dart';
+import '../../widgets/profile_error_view.dart';
 import 'student_courses_screen.dart';
 
-class StudentProfileScreen extends StatelessWidget {
+class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
 
   static const routeName = '/student/profile';
 
   @override
+  State<StudentProfileScreen> createState() => _StudentProfileScreenState();
+}
+
+class _StudentProfileScreenState extends State<StudentProfileScreen> {
+  late Future<ProfileSnapshot> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileFuture = ProfileService.instance.fetchStudentSnapshot();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _profileFuture = ProfileService.instance.fetchStudentSnapshot();
+    });
+    await _profileFuture;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final approvedCourses = studentEnrollments
-        .where((enrollment) => enrollment.status == EnrollmentStatus.approved)
-        .toList();
-    final pendingCourses = studentEnrollments
-        .where((enrollment) => enrollment.status == EnrollmentStatus.pending)
-        .toList();
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: EvalisAppBar(title: context.t(AppText.studentProfileTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
+      body: FutureBuilder<ProfileSnapshot>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return ProfileErrorView(
+              message: snapshot.error.toString(),
+              onRetry: _refresh,
+            );
+          }
+
+          final data = snapshot.requireData;
+          final approvedCourses = data.byStatus(EnrollmentStatus.approved);
+          final pendingCourses = data.byStatus(EnrollmentStatus.pending);
+          final profile = data.profile;
+
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              children: [
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -35,8 +71,14 @@ class StudentProfileScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 36,
-                    backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
-                    child: const Icon(Icons.photo_camera_front_outlined, size: 28),
+                    backgroundColor: profile.avatarUrl == null
+                        ? colorScheme.primary.withValues(alpha: 0.12)
+                        : null,
+                    backgroundImage:
+                        profile.avatarUrl != null ? NetworkImage(profile.avatarUrl!) : null,
+                    child: profile.avatarUrl == null
+                        ? const Icon(Icons.photo_camera_front_outlined, size: 28)
+                        : null,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -78,17 +120,19 @@ class StudentProfileScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    studentProfile.name,
+                    profile.name,
                     style: Theme.of(context)
                         .textTheme
                         .titleLarge
                         ?.copyWith(fontWeight: FontWeight.w700),
                   ),
-                  Text(studentProfile.roleLabel, style: Theme.of(context).textTheme.bodyMedium),
+                  Text(profile.roleLabel, style: Theme.of(context).textTheme.bodyMedium),
+                  if (profile.headline.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(profile.headline, style: Theme.of(context).textTheme.bodyMedium),
+                  ],
                   const SizedBox(height: 12),
-                  Text(studentProfile.headline, style: Theme.of(context).textTheme.bodyMedium),
-                  const SizedBox(height: 12),
-                  Text(studentProfile.email, style: Theme.of(context).textTheme.bodySmall),
+                  Text(profile.email, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
@@ -119,9 +163,11 @@ class StudentProfileScreen extends StatelessWidget {
         ],
       ),
     );
+          },
+        ),
+      );
+    }
   }
-}
-
 class _CourseSection extends StatelessWidget {
   const _CourseSection({
     required this.title,
@@ -178,3 +224,4 @@ class _CourseSection extends StatelessWidget {
     );
   }
 }
+

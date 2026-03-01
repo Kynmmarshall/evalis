@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
 import '../../models/app_role.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/language_menu_button.dart';
 import '../../widgets/theme_toggle_button.dart';
 
@@ -21,6 +23,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   AppRole _role = AppRole.student;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -126,14 +129,26 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ButtonSegment(value: AppRole.student, label: Text(context.t(AppText.studentRole))),
               ],
               selected: <AppRole>{_role},
-              onSelectionChanged: (value) => setState(() => _role = value.first),
+              onSelectionChanged:
+                  _isSubmitting ? null : (value) => setState(() => _role = value.first),
             ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _handleRegistration,
-                child: Text(context.t(AppText.registerButton)),
+                onPressed: _isSubmitting ? null : _handleRegistration,
+                child: _isSubmitting
+                    ? SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      )
+                    : Text(context.t(AppText.registerButton)),
               ),
             ),
             const SizedBox(height: 16),
@@ -152,15 +167,45 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  void _handleRegistration() {
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.t(AppText.passwordMismatch))));
+  Future<void> _handleRegistration() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+    final fullName = _nameController.text.trim();
+
+    if (password != confirmPassword) {
+      _showError(context.t(AppText.passwordMismatch));
       return;
     }
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.t(AppText.registrationSuccess))));
-    Navigator.pop(context);
+
+    if (email.isEmpty || password.isEmpty) {
+      _showError(context.t(AppText.authMissingCredentials));
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() => _isSubmitting = true);
+    try {
+      final role = await AuthService.instance.signUpWithEmail(
+        email: email,
+        password: password,
+        fullName: fullName,
+        role: _role,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.t(AppText.registrationSuccess))));
+      Navigator.pop(context, role);
+    } on AuthException catch (error) {
+      _showError(error.message);
+    } catch (_) {
+      _showError(context.t(AppText.authGenericError));
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   double get _passwordStrength => _calculatePasswordStrength(_passwordController.text);
@@ -184,5 +229,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     if (value >= 0.75) return scheme.primary;
     if (value >= 0.4) return scheme.secondary;
     return scheme.error;
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 }

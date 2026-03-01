@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     url: 'https://fshklqbpmzqogiixjspe.supabase.co',
     anonKey: 'sb_publishable_URRjCW_tZ80ismwpuu3YPw_WLhoDjDh',

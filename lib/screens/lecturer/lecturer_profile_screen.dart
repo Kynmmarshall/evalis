@@ -1,24 +1,65 @@
 import 'package:flutter/material.dart';
 
 import '../../app_settings.dart';
-import '../../data/mock_data.dart';
 import '../../l10n/app_texts.dart';
+import '../../services/profile_service.dart';
 import '../../widgets/evalis_app_bar.dart';
+import '../../widgets/profile_error_view.dart';
 import '../lecturer/lecturer_approvals_screen.dart';
 
-class LecturerProfileScreen extends StatelessWidget {
+class LecturerProfileScreen extends StatefulWidget {
   const LecturerProfileScreen({super.key});
 
   static const routeName = '/lecturer/profile';
+
+  @override
+  State<LecturerProfileScreen> createState() => _LecturerProfileScreenState();
+}
+
+class _LecturerProfileScreenState extends State<LecturerProfileScreen> {
+  late Future<LecturerProfileSnapshot> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileFuture = ProfileService.instance.fetchLecturerSnapshot();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _profileFuture = ProfileService.instance.fetchLecturerSnapshot();
+    });
+    await _profileFuture;
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: EvalisAppBar(title: context.t(AppText.lecturerProfileTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
+      body: FutureBuilder<LecturerProfileSnapshot>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return ProfileErrorView(
+              message: snapshot.error.toString(),
+              onRetry: _refresh,
+            );
+          }
+
+          final data = snapshot.requireData;
+          final profile = data.profile;
+          final courses = data.courses;
+
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              children: [
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -27,8 +68,14 @@ class LecturerProfileScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 36,
-                    backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
-                    child: const Icon(Icons.photo_camera_front_outlined, size: 28),
+                    backgroundColor: profile.avatarUrl == null
+                        ? colorScheme.primary.withValues(alpha: 0.12)
+                        : null,
+                    backgroundImage:
+                        profile.avatarUrl != null ? NetworkImage(profile.avatarUrl!) : null,
+                    child: profile.avatarUrl == null
+                        ? const Icon(Icons.photo_camera_front_outlined, size: 28)
+                        : null,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -70,32 +117,34 @@ class LecturerProfileScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    lecturerProfile.name,
+                    profile.name,
                     style: Theme.of(context)
                         .textTheme
                         .titleLarge
                         ?.copyWith(fontWeight: FontWeight.w700),
                   ),
-                  Text(lecturerProfile.roleLabel, style: Theme.of(context).textTheme.bodyMedium),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 26,
-                        backgroundColor: colorScheme.secondary.withValues(alpha: 0.18),
-                        child: const Icon(Icons.person_outline_rounded),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          lecturerProfile.headline,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                  Text(profile.roleLabel, style: Theme.of(context).textTheme.bodyMedium),
+                  if (profile.headline.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 26,
+                          backgroundColor: colorScheme.secondary.withValues(alpha: 0.18),
+                          child: const Icon(Icons.person_outline_rounded),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            profile.headline,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 12),
-                  Text(lecturerProfile.email, style: Theme.of(context).textTheme.bodySmall),
+                  Text(profile.email, style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
             ),
@@ -115,31 +164,37 @@ class LecturerProfileScreen extends StatelessWidget {
                   Text(context.t(AppText.coursesCardTitle),
                       style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 12),
-                  ...lecturerProfile.courses.map(
-                    (course) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        children: [
-                          Icon(Icons.class_rounded, color: colorScheme.primary),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(course.title,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall
-                                        ?.copyWith(fontWeight: FontWeight.w600)),
-                                Text('${course.code} • ${course.schedule}',
-                                    style: Theme.of(context).textTheme.bodySmall),
-                              ],
+                  if (courses.isEmpty)
+                    Text(
+                      context.t(AppText.pendingApprovalNote),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  else
+                    ...courses.map(
+                      (course) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            Icon(Icons.class_rounded, color: colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(course.title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(fontWeight: FontWeight.w600)),
+                                  Text('${course.code} • ${course.schedule}',
+                                      style: Theme.of(context).textTheme.bodySmall),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: () => Navigator.pushNamed(context, LecturerApprovalsScreen.routeName),
@@ -160,5 +215,8 @@ class LecturerProfileScreen extends StatelessWidget {
         ],
       ),
     );
+          },
+        ),
+      );
+    }
   }
-}
