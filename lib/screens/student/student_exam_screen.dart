@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../app_settings.dart';
-import '../../data/mock_data.dart';
 import '../../l10n/app_texts.dart';
+import '../../models/mock_question.dart';
+import '../../services/assessment_service.dart';
+import '../../services/api_client.dart';
 import '../../widgets/evalis_app_bar.dart';
 import 'student_feedback_screen.dart';
 
@@ -16,17 +18,56 @@ class StudentExamScreen extends StatefulWidget {
 }
 
 class _StudentExamScreenState extends State<StudentExamScreen> {
-  final List<int?> _answers = List<int?>.filled(mockQuestions.length, null);
+  final AssessmentService _assessmentService = AssessmentService.instance;
+  List<MockQuestion> _questions = const [];
+  List<int?> _answers = const [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuestions();
+  }
+
+  Future<void> _loadQuestions() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final questions = await _assessmentService.fetchPracticeQuestions();
+      if (!mounted) return;
+      setState(() {
+        _questions = questions;
+        _answers = List<int?>.filled(questions.length, null);
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.message);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: EvalisAppBar(title: context.t(AppText.examTitle)),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: mockQuestions.length + 2,
-        itemBuilder: (context, index) {
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? _ErrorView(message: _error!, onRetry: _loadQuestions)
+              : _questions.isEmpty
+                  ? _EmptyState(onRefresh: _loadQuestions)
+                    : ListView.builder(
+                      padding: const EdgeInsets.all(20),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: _questions.length + 2,
+                      itemBuilder: (context, index) {
           if (index == 0) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
@@ -62,7 +103,7 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
             );
           }
 
-          if (index == mockQuestions.length + 1) {
+          if (index == _questions.length + 1) {
             return Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 32),
               child: FilledButton(
@@ -72,7 +113,7 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
             );
           }
 
-          final question = mockQuestions[index - 1];
+          final question = _questions[index - 1];
           final answer = _answers[index - 1];
           final isLocked = answer != null;
 
@@ -166,7 +207,60 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
               ),
             ),
           );
-        },
+                      },
+                    ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            FilledButton(onPressed: onRetry, child: Text(context.t(AppText.retryAction))),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.onRefresh});
+
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.t(AppText.examSubtitle),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton(
+              onPressed: onRefresh,
+              child: Text(context.t(AppText.retryAction)),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -21,7 +21,6 @@ class AuthService {
 
   final ApiClient _api = ApiClient.instance;
   AppRole? _cachedRole;
-  Map<String, dynamic>? _user;
 
   AppRole? get currentRole => _cachedRole;
   String? get token => _api.token;
@@ -36,7 +35,6 @@ class AuthService {
     try {
       final response = await _api.get('/auth/me') as Map<String, dynamic>;
       final user = response['user'] as Map<String, dynamic>?;
-      _user = user;
       _cachedRole = _extractRole(user) ?? AppRole.student;
       return _cachedRole;
     } on ApiException {
@@ -88,7 +86,6 @@ class AuthService {
 
   Future<void> signOut() async {
     _cachedRole = null;
-    _user = null;
     _api.updateToken(null);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
@@ -108,7 +105,6 @@ class AuthService {
       throw const AuthException('Malformed response from server');
     }
     _api.updateToken(token);
-    _user = user;
     _cachedRole = _extractRole(user) ?? fallbackRole ?? AppRole.student;
     _persistToken(token);
     return _cachedRole!;

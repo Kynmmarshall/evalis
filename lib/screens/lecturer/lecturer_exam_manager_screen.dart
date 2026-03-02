@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../app_settings.dart';
-import '../../data/mock_data.dart';
 import '../../l10n/app_texts.dart';
 import '../../models/exam_brief.dart';
+import '../../services/assessment_service.dart';
 import '../../widgets/evalis_app_bar.dart';
 import 'lecturer_create_mcq_screen.dart';
 
@@ -17,13 +17,18 @@ class LecturerExamManagerScreen extends StatefulWidget {
 }
 
 class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
+  final AssessmentService _assessmentService = AssessmentService.instance;
   final TextEditingController _nameController = TextEditingController();
-  late List<ExamBrief> _exams;
+  List<ExamBrief> _exams = const [];
+  bool _isLoading = true;
+  bool _isCreating = false;
+  String? _error;
+  String? _pendingDeletionId;
 
   @override
   void initState() {
     super.initState();
-    _exams = List<ExamBrief>.from(mockExams);
+    _loadExams();
   }
 
   @override
@@ -34,60 +39,88 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: EvalisAppBar(title: context.t(AppText.examManagerTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            context.t(AppText.examManagerSubtitle),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          const SizedBox(height: 20),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: context.t(AppText.examNameLabel),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+    Widget body;
+    if (_isLoading) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (_error != null) {
+      body = _ErrorView(message: _error!, onRetry: _loadExams);
+    } else {
+      body = RefreshIndicator(
+        onRefresh: _loadExams,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Text(
+              context.t(AppText.examManagerSubtitle),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: context.t(AppText.examNameLabel),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _createExam,
-                      child: Text(context.t(AppText.createExamButton)),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _isCreating
+                            ? null
+                            : () {
+                                _createExam();
+                              },
+                        child: _isCreating
+                            ? const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Text(context.t(AppText.createExamButton)),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          ..._exams.map((exam) => _ExamCard(
-                exam: exam,
-                onManage: () => _openBuilder(exam),
-                onRemove: () => _removeExam(exam),
-              )),
-        ],
-      ),
+            const SizedBox(height: 20),
+            if (_exams.isEmpty)
+              _EmptyList()
+            else
+              ..._exams.map(
+                (exam) => _ExamCard(
+                  exam: exam,
+                  onManage: () => _openBuilder(exam),
+                  onRemove: () => _removeExam(exam),
+                  isDeleting: _pendingDeletionId == exam.id,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: EvalisAppBar(title: context.t(AppText.examManagerTitle)),
+      body: AnimatedSwitcher(duration: const Duration(milliseconds: 200), child: body),
     );
   }
 
-  void _createExam() {
+  Future<void> _createExam() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(context.t(AppText.examNameRequired))));
       return;
     }
-    final id = 'ex-${DateTime.now().millisecondsSinceEpoch}';
     final generatedCode = name
         .split(' ')
         .where((part) => part.isNotEmpty)
@@ -95,18 +128,29 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
         .take(3)
         .join()
         .toUpperCase();
-    final exam = ExamBrief(
-      id: id,
-      title: name,
-      courseCode: generatedCode.isEmpty ? 'GEN' : generatedCode,
-      window: 'Draft window',
-    );
-    setState(() {
-      _exams.insert(0, exam);
-      _nameController.clear();
-    });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.t(AppText.examCreated))));
+    setState(() => _isCreating = true);
+    try {
+      final exam = await _assessmentService.createExam(
+        title: name,
+        courseCode: generatedCode.isEmpty ? 'GEN' : generatedCode,
+        examWindow: 'Draft window',
+      );
+      if (!mounted) return;
+      setState(() {
+        _exams = [exam, ..._exams];
+        _nameController.clear();
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.t(AppText.examCreated))));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      if (mounted) {
+        setState(() => _isCreating = false);
+      }
+    }
   }
 
   void _openBuilder(ExamBrief exam) {
@@ -117,19 +161,57 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
     );
   }
 
-  void _removeExam(ExamBrief exam) {
-    setState(() => _exams.remove(exam));
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(context.t(AppText.examRemoved))));
+  Future<void> _removeExam(ExamBrief exam) async {
+    setState(() => _pendingDeletionId = exam.id);
+    try {
+      await _assessmentService.deleteExam(exam.id);
+      if (!mounted) return;
+      setState(() => _exams = _exams.where((item) => item.id != exam.id).toList());
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.t(AppText.examRemoved))));
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      if (mounted) {
+        setState(() => _pendingDeletionId = null);
+      }
+    }
+  }
+
+  Future<void> _loadExams() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final exams = await _assessmentService.fetchExams();
+      if (!mounted) return;
+      setState(() => _exams = exams);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 }
 
 class _ExamCard extends StatelessWidget {
-  const _ExamCard({required this.exam, required this.onManage, required this.onRemove});
+  const _ExamCard({
+    required this.exam,
+    required this.onManage,
+    required this.onRemove,
+    required this.isDeleting,
+  });
 
   final ExamBrief exam;
   final VoidCallback onManage;
   final VoidCallback onRemove;
+  final bool isDeleting;
 
   @override
   Widget build(BuildContext context) {
@@ -161,11 +243,17 @@ class _ExamCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: onRemove,
+                      onPressed: isDeleting ? null : onRemove,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: colorScheme.error,
                       ),
-                      child: Text(context.t(AppText.removeExamButton)),
+                      child: isDeleting
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(context.t(AppText.removeExamButton)),
                     ),
                   ),
                 ],
@@ -174,6 +262,53 @@ class _ExamCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () {
+                onRetry();
+              },
+              child: Text(context.t(AppText.retryAction)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyList extends StatelessWidget {
+  const _EmptyList();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(Icons.assignment_add, size: 48, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 12),
+        Text(
+          context.t(AppText.examManagerSubtitle),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }
