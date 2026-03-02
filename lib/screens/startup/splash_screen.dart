@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
@@ -32,13 +31,16 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
 
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      final role = AuthService.instance.resolveRole(session.user);
-      _navigateToRole(role);
-      return;
+    try {
+      final role = await AuthService.instance.bootstrap();
+      if (!mounted) return;
+      if (role != null) {
+        _navigateToRole(role);
+        return;
+      }
+    } catch (_) {
+      // Ignore bootstrap errors and fall back to login.
     }
-
     _goToLogin();
   }
 

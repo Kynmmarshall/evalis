@@ -4,18 +4,10 @@ import 'app_settings.dart';
 import 'l10n/app_texts.dart';
 import 'routing/app_router.dart';
 import 'screens/startup/splash_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: 'https://fshklqbpmzqogiixjspe.supabase.co',
-    anonKey: 'sb_publishable_URRjCW_tZ80ismwpuu3YPw_WLhoDjDh',
-    authOptions: const FlutterAuthClientOptions(
-      autoRefreshToken: true,
-    ),
-  );
   runApp(MainApp());
 }
 

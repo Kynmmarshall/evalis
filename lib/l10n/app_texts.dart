@@ -127,6 +127,8 @@ enum AppText {
     pendingStatus,
     approvedStatus,
     pendingApprovalNote,
+    noMoreCourses,
+    noPendingRequests,
     exploreLanding,
 }
 
@@ -266,6 +268,8 @@ class L10n {
             AppText.pendingStatus: 'Pending approval',
             AppText.approvedStatus: 'Approved',
             AppText.pendingApprovalNote: 'Teachers must approve each course before content unlocks.',
+            AppText.noMoreCourses: 'All available courses are already in review or approved.',
+            AppText.noPendingRequests: 'No requests in the queue. Join a course to see its status here.',
             AppText.exploreLanding: 'Preview marketing landing',
     },
     AppLanguage.french: {
@@ -414,6 +418,8 @@ class L10n {
             AppText.pendingStatus: 'En attente',
             AppText.approvedStatus: 'Validé',
             AppText.pendingApprovalNote: 'Chaque cours doit être approuvé par l’enseignant avant l’accès.',
+            AppText.noMoreCourses: 'Tous les cours disponibles sont déjà en cours de validation ou approuvés.',
+            AppText.noPendingRequests: 'Aucune demande en cours. Inscrivez-vous à un cours pour suivre son statut ici.',
             AppText.exploreLanding: 'Découvrir la page vitrine',
     },
   };

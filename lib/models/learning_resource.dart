@@ -10,4 +10,13 @@ class LearningResource {
   final String description;
   final String format;
   final String eta;
+
+  factory LearningResource.fromJson(Map<String, dynamic> json) {
+    return LearningResource(
+      title: (json['title'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
+      format: (json['format'] ?? '').toString(),
+      eta: (json['eta'] ?? '').toString(),
+    );
+  }
 }
