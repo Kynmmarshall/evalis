@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 const String _fallbackBaseUrl = String.fromEnvironment(
   'EVALIS_API_URL',
-  defaultValue: 'http://38.242.246.126:4000/api',
+  defaultValue: 'http://38.242.246.126:4100/api',
 );
 
 class ApiException implements Exception {
@@ -93,13 +93,21 @@ class ApiClient {
 
   dynamic _decode(http.Response response) {
     final statusCode = response.statusCode;
-    final body = response.body.isEmpty ? null : jsonDecode(response.body);
+    final rawBody = response.body;
+    dynamic body;
+    if (rawBody.isNotEmpty) {
+      try {
+        body = jsonDecode(rawBody);
+      } on FormatException {
+        body = rawBody;
+      }
+    }
     if (statusCode >= 200 && statusCode < 300) {
       return body;
     }
     final message = body is Map<String, dynamic>
         ? (body['message']?.toString() ?? 'Request failed')
-        : 'Request failed';
+        : (body is String && body.isNotEmpty ? body : 'Request failed');
     throw ApiException(message, statusCode: statusCode);
   }
 }

@@ -23,13 +23,14 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  AppRole _selectedRole = AppRole.lecturer;
+  final TextEditingController _lecturerCodeController = TextEditingController();
   bool _isSubmitting = false;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _lecturerCodeController.dispose();
     super.dispose();
   }
 
@@ -62,24 +63,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               Text(context.t(AppText.loginSubtitle), style: Theme.of(context).textTheme.bodyLarge),
               const SizedBox(height: 24),
-              SegmentedButton<AppRole>(
-                segments: [
-                  ButtonSegment(
-                    value: AppRole.lecturer,
-                    label: Text(context.t(AppText.lecturerRole)),
-                    icon: const Icon(Icons.campaign_rounded),
-                  ),
-                  ButtonSegment(
-                    value: AppRole.student,
-                    label: Text(context.t(AppText.studentRole)),
-                    icon: const Icon(Icons.school_rounded),
-                  ),
-                ],
-                selected: <AppRole>{_selectedRole},
-                onSelectionChanged:
-                    _isSubmitting ? null : (value) => setState(() => _selectedRole = value.first),
-              ),
-              const SizedBox(height: 20),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -96,6 +79,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: context.t(AppText.passwordLabel),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                 ),
+              ),
+              const SizedBox(height: 20),
+              _LecturerCodeCard(
+                controller: _lecturerCodeController,
+                enabled: !_isSubmitting,
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -120,16 +108,8 @@ class _LoginScreenState extends State<LoginScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () async {
-                            final result = await Navigator.pushNamed(
-                              context,
-                              RegistrationScreen.routeName,
-                            );
-                            if (!mounted || result is! AppRole) return;
-                            setState(() => _selectedRole = result);
-                          },
+                  onPressed:
+                      _isSubmitting ? null : () => Navigator.pushNamed(context, RegistrationScreen.routeName),
                   child: Text(context.t(AppText.registerLink)),
                 ),
               ),
@@ -184,6 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
+    final lecturerCode = _lecturerCodeController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       _showError(context.t(AppText.authMissingCredentials));
@@ -197,11 +178,14 @@ class _LoginScreenState extends State<LoginScreen> {
       final role = await AuthService.instance.signInWithEmail(
         email: email,
         password: password,
-        fallbackRole: _selectedRole,
+        lecturerCode: lecturerCode.isEmpty ? null : lecturerCode,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(context.t(AppText.loginSuccess))));
+      if (lecturerCode.isNotEmpty && role != AppRole.lecturer) {
+        _showError(context.t(AppText.lecturerCodeInvalid));
+      }
       _navigateToRole(role);
     } on AuthException catch (error) {
       _showError(error.message);
@@ -231,6 +215,52 @@ class _LoginScreenState extends State<LoginScreen> {
       SnackBar(
         content: Text(message),
         backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
+}
+
+class _LecturerCodeCard extends StatelessWidget {
+  const _LecturerCodeCard({
+    required this.controller,
+    required this.enabled,
+  });
+
+  final TextEditingController controller;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.t(AppText.lecturerCodeSection),
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: controller,
+              enabled: enabled,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: context.t(AppText.lecturerCodeLabel),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              context.t(AppText.lecturerCodeHelper),
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
       ),
     );
   }

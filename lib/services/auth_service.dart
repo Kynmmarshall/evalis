@@ -3,6 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/app_role.dart';
 import 'api_client.dart';
 
+const String _lecturerAccessCode = String.fromEnvironment(
+  'EVALIS_LECTURER_CODE',
+  defaultValue: 'lect123',
+);
+
 class AuthException implements Exception {
   const AuthException(this.message);
 
@@ -46,7 +51,7 @@ class AuthService {
   Future<AppRole> signInWithEmail({
     required String email,
     required String password,
-    AppRole? fallbackRole,
+    String? lecturerCode,
   }) async {
     try {
       final response = await _api.post(
@@ -56,7 +61,9 @@ class AuthService {
           'password': password,
         },
       ) as Map<String, dynamic>;
-      return _persistSession(response, fallbackRole: fallbackRole);
+      final role = _persistSession(response);
+      _applyLecturerOverride(lecturerCode);
+      return _cachedRole ?? role;
     } on ApiException catch (error) {
       throw AuthException(error.message);
     }
@@ -66,7 +73,6 @@ class AuthService {
     required String email,
     required String password,
     required String fullName,
-    required AppRole role,
   }) async {
     try {
       final response = await _api.post(
@@ -75,10 +81,10 @@ class AuthService {
           'email': email,
           'password': password,
           'name': fullName,
-          'role': role.name,
+          'role': AppRole.student.name,
         },
       ) as Map<String, dynamic>;
-      return _persistSession(response, fallbackRole: role);
+      return _persistSession(response);
     } on ApiException catch (error) {
       throw AuthException(error.message);
     }
@@ -95,17 +101,14 @@ class AuthService {
     return _cachedRole ?? fallback;
   }
 
-  AppRole _persistSession(
-    Map<String, dynamic> response, {
-    AppRole? fallbackRole,
-  }) {
+  AppRole _persistSession(Map<String, dynamic> response) {
     final token = response['token'] as String?;
     final user = response['user'] as Map<String, dynamic>?;
     if (token == null || user == null) {
       throw const AuthException('Malformed response from server');
     }
     _api.updateToken(token);
-    _cachedRole = _extractRole(user) ?? fallbackRole ?? AppRole.student;
+    _cachedRole = _extractRole(user) ?? AppRole.student;
     _persistToken(token);
     return _cachedRole!;
   }
@@ -127,5 +130,22 @@ class AuthService {
       }
     }
     return null;
+  }
+
+  bool isLecturerCodeValid(String code) => _lecturerCodeMatches(code);
+
+  void _applyLecturerOverride(String? code) {
+    if (code == null) return;
+    if (_lecturerCodeMatches(code)) {
+      _cachedRole = AppRole.lecturer;
+    }
+  }
+
+  bool _lecturerCodeMatches(String? candidate) {
+    final expected = _lecturerAccessCode.trim();
+    if (expected.isEmpty) return false;
+    final provided = candidate?.trim();
+    if (provided == null || provided.isEmpty) return false;
+    return expected.toLowerCase() == provided.toLowerCase();
   }
 }

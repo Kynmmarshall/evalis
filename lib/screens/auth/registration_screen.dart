@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
-import '../../models/app_role.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/language_menu_button.dart';
 import '../../widgets/theme_toggle_button.dart';
@@ -21,7 +20,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  AppRole _role = AppRole.student;
   bool _isSubmitting = false;
 
   @override
@@ -119,18 +117,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 );
               },
             ),
-            const SizedBox(height: 20),
-            Text(context.t(AppText.roleLabel), style: Theme.of(context).textTheme.labelLarge),
-            const SizedBox(height: 12),
-            SegmentedButton<AppRole>(
-              segments: [
-                ButtonSegment(value: AppRole.lecturer, label: Text(context.t(AppText.lecturerRole))),
-                ButtonSegment(value: AppRole.student, label: Text(context.t(AppText.studentRole))),
-              ],
-              selected: <AppRole>{_role},
-              onSelectionChanged:
-                  _isSubmitting ? null : (value) => setState(() => _role = value.first),
-            ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
@@ -186,16 +172,15 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final role = await AuthService.instance.signUpWithEmail(
+      await AuthService.instance.signUpWithEmail(
         email: email,
         password: password,
         fullName: fullName,
-        role: _role,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(context.t(AppText.registrationSuccess))));
-      Navigator.pop(context, role);
+      Navigator.pop(context);
     } on AuthException catch (error) {
       _showError(error.message);
     } catch (_) {
