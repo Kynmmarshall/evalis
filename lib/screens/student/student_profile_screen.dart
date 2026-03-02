@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
 
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
@@ -19,6 +21,8 @@ class StudentProfileScreen extends StatefulWidget {
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
   late Future<ProfileSnapshot> _profileFuture;
+  final ImagePicker _imagePicker = ImagePicker();
+  bool _uploadingAvatar = false;
 
   @override
   void initState() {
@@ -31,6 +35,42 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       _profileFuture = ProfileService.instance.fetchStudentSnapshot();
     });
     await _profileFuture;
+  }
+
+  void _showSnack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _handleAvatarUpload() async {
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) {
+      return;
+    }
+
+    setState(() => _uploadingAvatar = true);
+
+    try {
+      final bytes = await pickedFile.readAsBytes();
+      final mimeType = lookupMimeType(pickedFile.name, headerBytes: bytes);
+      await ProfileService.instance.uploadAvatar(bytes: bytes, contentType: mimeType);
+      if (!mounted) return;
+      await _refresh();
+      if (!mounted) return;
+      _showSnack(context.t(AppText.profilePhotoSuccess));
+    } catch (error) {
+      if (!mounted) return;
+      _showSnack(context.t(AppText.profilePhotoFailure));
+    } finally {
+      if (mounted) {
+        setState(() => _uploadingAvatar = false);
+      }
+    }
   }
 
   @override
@@ -99,10 +139,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         ),
                         const SizedBox(height: 12),
                         FilledButton.tonalIcon(
-                          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(context.t(AppText.prototypeMessage))),
-                          ),
-                          icon: const Icon(Icons.upload_rounded),
+                          onPressed: _uploadingAvatar ? null : _handleAvatarUpload,
+                          icon: _uploadingAvatar
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2.2),
+                                )
+                              : const Icon(Icons.upload_rounded),
                           label: Text(context.t(AppText.profilePhotoButton)),
                         ),
                       ],

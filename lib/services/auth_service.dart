@@ -40,6 +40,10 @@ class AuthService {
     return _extractRole(response.user?.userMetadata) ?? role;
   }
 
+  AppRole resolveRole(User? user, {AppRole fallback = AppRole.student}) {
+    return _extractRole(user?.userMetadata) ?? fallback;
+  }
+
   AppRole? _extractRole(Map<String, dynamic>? metadata) {
     final value = metadata?['role'];
     if (value is String) {

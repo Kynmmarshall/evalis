@@ -12,6 +12,9 @@ Future<void> main() async {
   await Supabase.initialize(
     url: 'https://fshklqbpmzqogiixjspe.supabase.co',
     anonKey: 'sb_publishable_URRjCW_tZ80ismwpuu3YPw_WLhoDjDh',
+    authOptions: const FlutterAuthClientOptions(
+      autoRefreshToken: true,
+    ),
   );
   runApp(MainApp());
 }

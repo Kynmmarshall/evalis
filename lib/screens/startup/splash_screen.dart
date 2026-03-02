@@ -1,11 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
+import '../../models/app_role.dart';
+import '../../services/auth_service.dart';
 import '../../theme.dart';
 import '../auth/login_screen.dart';
+import '../lecturer/lecturer_dashboard_screen.dart';
+import '../student/student_dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,21 +22,35 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
-
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, LoginScreen.routeName);
-    });
+    _bootstrap();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> _bootstrap() async {
+    await Future<void>.delayed(const Duration(milliseconds: 1200));
+    if (!mounted) return;
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      final role = AuthService.instance.resolveRole(session.user);
+      _navigateToRole(role);
+      return;
+    }
+
+    _goToLogin();
+  }
+
+  void _navigateToRole(AppRole role) {
+    final target = role == AppRole.lecturer
+        ? LecturerDashboardScreen.routeName
+        : StudentDashboardScreen.routeName;
+    Navigator.pushReplacementNamed(context, target);
+  }
+
+  void _goToLogin() {
+    Navigator.pushReplacementNamed(context, LoginScreen.routeName);
   }
 
   @override
