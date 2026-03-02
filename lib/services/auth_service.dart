@@ -1,25 +1,67 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_role.dart';
+import 'api_client.dart';
+
+class AuthException implements Exception {
+  const AuthException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
 
 class AuthService {
   AuthService._();
 
   static final AuthService instance = AuthService._();
 
-  final SupabaseClient _client = Supabase.instance.client;
+  static const String _tokenKey = 'evalis_auth_token';
+
+  final ApiClient _api = ApiClient.instance;
+  AppRole? _cachedRole;
+  Map<String, dynamic>? _user;
+
+  AppRole? get currentRole => _cachedRole;
+  String? get token => _api.token;
+
+  Future<AppRole?> bootstrap() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_tokenKey);
+    if (token == null) {
+      return null;
+    }
+    _api.updateToken(token);
+    try {
+      final response = await _api.get('/auth/me') as Map<String, dynamic>;
+      final user = response['user'] as Map<String, dynamic>?;
+      _user = user;
+      _cachedRole = _extractRole(user) ?? AppRole.student;
+      return _cachedRole;
+    } on ApiException {
+      await signOut();
+      return null;
+    }
+  }
 
   Future<AppRole> signInWithEmail({
     required String email,
     required String password,
     AppRole? fallbackRole,
   }) async {
-    final response = await _client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
-
-    return _extractRole(response.user?.userMetadata) ?? fallbackRole ?? AppRole.student;
+    try {
+      final response = await _api.post(
+        '/auth/login',
+        body: {
+          'email': email,
+          'password': password,
+        },
+      ) as Map<String, dynamic>;
+      return _persistSession(response, fallbackRole: fallbackRole);
+    } on ApiException catch (error) {
+      throw AuthException(error.message);
+    }
   }
 
   Future<AppRole> signUpWithEmail({
@@ -28,26 +70,60 @@ class AuthService {
     required String fullName,
     required AppRole role,
   }) async {
-    final response = await _client.auth.signUp(
-      email: email,
-      password: password,
-      data: {
-        'full_name': fullName,
-        'role': role.name,
-      },
-    );
-
-    return _extractRole(response.user?.userMetadata) ?? role;
+    try {
+      final response = await _api.post(
+        '/auth/register',
+        body: {
+          'email': email,
+          'password': password,
+          'name': fullName,
+          'role': role.name,
+        },
+      ) as Map<String, dynamic>;
+      return _persistSession(response, fallbackRole: role);
+    } on ApiException catch (error) {
+      throw AuthException(error.message);
+    }
   }
 
-  AppRole resolveRole(User? user, {AppRole fallback = AppRole.student}) {
-    return _extractRole(user?.userMetadata) ?? fallback;
+  Future<void> signOut() async {
+    _cachedRole = null;
+    _user = null;
+    _api.updateToken(null);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
   }
 
-  AppRole? _extractRole(Map<String, dynamic>? metadata) {
-    final value = metadata?['role'];
-    if (value is String) {
-      final normalized = value.toLowerCase();
+  AppRole resolveRole({AppRole fallback = AppRole.student}) {
+    return _cachedRole ?? fallback;
+  }
+
+  AppRole _persistSession(
+    Map<String, dynamic> response, {
+    AppRole? fallbackRole,
+  }) {
+    final token = response['token'] as String?;
+    final user = response['user'] as Map<String, dynamic>?;
+    if (token == null || user == null) {
+      throw const AuthException('Malformed response from server');
+    }
+    _api.updateToken(token);
+    _user = user;
+    _cachedRole = _extractRole(user) ?? fallbackRole ?? AppRole.student;
+    _persistToken(token);
+    return _cachedRole!;
+  }
+
+  Future<void> _persistToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+  }
+
+  AppRole? _extractRole(Map<String, dynamic>? payload) {
+    final raw = payload?['role'];
+    final asString = raw is String ? raw : payload?['role_label'];
+    if (asString is String) {
+      final normalized = asString.toLowerCase();
       for (final role in AppRole.values) {
         if (role.name == normalized) {
           return role;

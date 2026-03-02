@@ -9,7 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  supabase_flutter: ^2.12.0
+  http: ^1.2.2
+  shared_preferences: ^2.3.2
   image_picker: ^1.0.7
   mime: ^1.0.5
 
