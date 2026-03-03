@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
+import '../../models/course_info.dart';
 import '../../models/exam_brief.dart';
 import '../../services/assessment_service.dart';
+import '../../services/enrollment_service.dart';
 import '../../widgets/evalis_app_bar.dart';
 import 'lecturer_create_mcq_screen.dart';
 
@@ -18,17 +20,22 @@ class LecturerExamManagerScreen extends StatefulWidget {
 
 class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
   final AssessmentService _assessmentService = AssessmentService.instance;
+  final EnrollmentService _enrollmentService = EnrollmentService.instance;
   final TextEditingController _nameController = TextEditingController();
   List<ExamBrief> _exams = const [];
+  List<CourseInfo> _courses = const [];
+  CourseInfo? _selectedCourse;
   bool _isLoading = true;
   bool _isCreating = false;
+  bool _isCoursesLoading = true;
   String? _error;
+  String? _courseError;
   String? _pendingDeletionId;
 
   @override
   void initState() {
     super.initState();
-    _loadExams();
+    _refreshAll();
   }
 
   @override
@@ -43,10 +50,10 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
     if (_isLoading) {
       body = const Center(child: CircularProgressIndicator());
     } else if (_error != null) {
-      body = _ErrorView(message: _error!, onRetry: _loadExams);
+      body = _ErrorView(message: _error!, onRetry: _refreshAll);
     } else {
       body = RefreshIndicator(
-        onRefresh: _loadExams,
+        onRefresh: _refreshAll,
         child: ListView(
           padding: const EdgeInsets.all(20),
           physics: const AlwaysScrollableScrollPhysics(),
@@ -70,10 +77,47 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    if (_isCoursesLoading)
+                      const LinearProgressIndicator(minHeight: 4)
+                    else if (_courseError != null)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_courseError!, style: Theme.of(context).textTheme.bodySmall),
+                          const SizedBox(height: 8),
+                          OutlinedButton(
+                            onPressed: _loadCourses,
+                            child: Text(context.t(AppText.retryAction)),
+                          ),
+                        ],
+                      )
+                    else if (_courses.isEmpty)
+                      Text(
+                        context.t(AppText.noCoursesAvailable),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      )
+                    else
+                      DropdownButtonFormField<CourseInfo>(
+                        value: _selectedCourse,
+                        items: _courses
+                            .map(
+                              (course) => DropdownMenuItem<CourseInfo>(
+                                value: course,
+                                child: Text('${course.code} • ${course.title}'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (course) => setState(() => _selectedCourse = course),
+                        decoration: InputDecoration(
+                          labelText: context.t(AppText.coursePickerLabel),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
+                    const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton(
-                        onPressed: _isCreating
+                        onPressed: _isCreating || _selectedCourse == null
                             ? null
                             : () {
                                 _createExam();
@@ -121,18 +165,17 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
           .showSnackBar(SnackBar(content: Text(context.t(AppText.examNameRequired))));
       return;
     }
-    final generatedCode = name
-        .split(' ')
-        .where((part) => part.isNotEmpty)
-        .map((part) => part[0])
-        .take(3)
-        .join()
-        .toUpperCase();
+    final course = _selectedCourse;
+    if (course == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.t(AppText.courseSelectionRequired))));
+      return;
+    }
     setState(() => _isCreating = true);
     try {
       final exam = await _assessmentService.createExam(
         title: name,
-        courseCode: generatedCode.isEmpty ? 'GEN' : generatedCode,
+        courseCode: course.code,
         examWindow: 'Draft window',
       );
       if (!mounted) return;
@@ -151,6 +194,13 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
         setState(() => _isCreating = false);
       }
     }
+  }
+
+  Future<void> _refreshAll() async {
+    await Future.wait([
+      _loadExams(),
+      _loadCourses(),
+    ]);
   }
 
   void _openBuilder(ExamBrief exam) {
@@ -176,6 +226,33 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
     } finally {
       if (mounted) {
         setState(() => _pendingDeletionId = null);
+      }
+    }
+  }
+
+  Future<void> _loadCourses() async {
+    setState(() {
+      _isCoursesLoading = true;
+      _courseError = null;
+    });
+    try {
+      final courses = await _enrollmentService.fetchAvailableCourses();
+      if (!mounted) return;
+      setState(() {
+        _courses = courses;
+        if (courses.isEmpty) {
+          _selectedCourse = null;
+        } else if (_selectedCourse == null ||
+            courses.every((course) => course.code != _selectedCourse!.code)) {
+          _selectedCourse = courses.first;
+        }
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _courseError = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isCoursesLoading = false);
       }
     }
   }

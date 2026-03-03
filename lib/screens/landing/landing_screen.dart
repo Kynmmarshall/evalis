@@ -7,8 +7,6 @@ import '../../widgets/language_menu_button.dart';
 import '../../widgets/theme_toggle_button.dart';
 import '../auth/login_screen.dart';
 import '../auth/registration_screen.dart';
-import '../lecturer/lecturer_dashboard_screen.dart';
-import '../student/student_dashboard_screen.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -33,15 +31,24 @@ class LandingScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Wrap(
-                  spacing: 8,
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
-                    TextButton(
+                    FilledButton.tonalIcon(
+                      icon: const Icon(Icons.login_rounded),
+                      label: Text(context.t(AppText.loginButton)),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
                       onPressed: () => Navigator.pushNamed(context, LoginScreen.routeName),
-                      child: Text(context.t(AppText.loginButton)),
                     ),
-                    TextButton(
+                    FilledButton.icon(
+                      icon: const Icon(Icons.person_add_rounded),
+                      label: Text(context.t(AppText.registerLink)),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
                       onPressed: () => Navigator.pushNamed(context, RegistrationScreen.routeName),
-                      child: Text(context.t(AppText.registerLink)),
                     ),
                   ],
                 ),
@@ -60,23 +67,6 @@ class LandingScreen extends StatelessWidget {
                       .textTheme
                       .titleMedium
                       ?.copyWith(color: Colors.white.withValues(alpha: 0.88)),
-                ),
-                const SizedBox(height: 32),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: [
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.edit_note_rounded),
-                      label: Text(context.t(AppText.lecturerCta)),
-                      onPressed: () => Navigator.pushNamed(context, LecturerDashboardScreen.routeName),
-                    ),
-                    FilledButton.icon(
-                      icon: const Icon(Icons.school_rounded),
-                      label: Text(context.t(AppText.studentCta)),
-                      onPressed: () => Navigator.pushNamed(context, StudentDashboardScreen.routeName),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: 40),
                 Row(

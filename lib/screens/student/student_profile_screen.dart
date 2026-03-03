@@ -5,9 +5,11 @@ import 'package:mime/mime.dart';
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
 import '../../models/course_enrollment.dart';
+import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../widgets/evalis_app_bar.dart';
 import '../../widgets/profile_error_view.dart';
+import '../auth/login_screen.dart';
 import 'student_courses_screen.dart';
 
 class StudentProfileScreen extends StatefulWidget {
@@ -204,6 +206,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             icon: const Icon(Icons.playlist_add_check_circle_rounded),
             label: Text(context.t(AppText.availableCoursesTitle)),
           ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: _handleSignOut,
+            icon: const Icon(Icons.logout_rounded),
+            label: Text(context.t(AppText.signOutButton)),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: colorScheme.error,
+              side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
+            ),
+          ),
         ],
       ),
     );
@@ -211,6 +223,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         ),
       );
     }
+
+  Future<void> _handleSignOut() async {
+    await AuthService.instance.signOut();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, LoginScreen.routeName, (route) => false);
+  }
   }
 class _CourseSection extends StatelessWidget {
   const _CourseSection({

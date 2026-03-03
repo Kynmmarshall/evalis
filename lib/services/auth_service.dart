@@ -54,12 +54,14 @@ class AuthService {
     String? lecturerCode,
   }) async {
     try {
+      final payload = {
+        'email': email,
+        'password': password,
+        if (lecturerCode != null) 'lecturerCode': lecturerCode,
+      };
       final response = await _api.post(
         '/auth/login',
-        body: {
-          'email': email,
-          'password': password,
-        },
+        body: payload,
       ) as Map<String, dynamic>;
       final role = _persistSession(response);
       _applyLecturerOverride(lecturerCode);
@@ -81,7 +83,6 @@ class AuthService {
           'email': email,
           'password': password,
           'name': fullName,
-          'role': AppRole.student.name,
         },
       ) as Map<String, dynamic>;
       return _persistSession(response);

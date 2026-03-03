@@ -168,6 +168,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       return;
     }
 
+    if (password.length < 8) {
+      _showError(context.t(AppText.authPasswordTooShort));
+      return;
+    }
+
     FocusScope.of(context).unfocus();
 
     setState(() => _isSubmitting = true);

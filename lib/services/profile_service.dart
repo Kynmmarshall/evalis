@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 
 import '../models/course_enrollment.dart';
@@ -61,13 +62,16 @@ class ProfileService {
     if (authToken == null) {
       throw const AuthException('Sign in required');
     }
-    final extension = _extensionFromMime(contentType ?? lookupMimeType('', headerBytes: bytes));
+    final resolvedMime = contentType ?? lookupMimeType('', headerBytes: bytes) ?? 'image/jpeg';
+    final extension = _extensionFromMime(resolvedMime);
+    final mediaType = MediaType.parse(resolvedMime);
     final request = http.MultipartRequest('POST', _api.resolve('/profile/avatar'))
       ..headers['Authorization'] = 'Bearer $authToken'
       ..files.add(http.MultipartFile.fromBytes(
         'avatar',
         bytes,
         filename: 'avatar.$extension',
+        contentType: mediaType,
       ));
 
     final result = await _api.send(request) as Map<String, dynamic>;
