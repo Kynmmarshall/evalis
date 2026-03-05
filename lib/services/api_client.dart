@@ -51,11 +51,28 @@ class ApiClient {
     return _decode(response);
   }
 
+  Future<dynamic> put(String path, {Object? body}) async {
+    final response = await _http.put(
+      _buildUri(path),
+      headers: _headers(),
+      body: body == null ? null : jsonEncode(body),
+    );
+    return _decode(response);
+  }
+
   Future<dynamic> patch(String path, {Object? body}) async {
     final response = await _http.patch(
       _buildUri(path),
       headers: _headers(),
       body: body == null ? null : jsonEncode(body),
+    );
+    return _decode(response);
+  }
+
+  Future<dynamic> delete(String path) async {
+    final response = await _http.delete(
+      _buildUri(path),
+      headers: _headers(contentType: false),
     );
     return _decode(response);
   }

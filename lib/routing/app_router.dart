@@ -6,6 +6,7 @@ import '../screens/landing/landing_screen.dart';
 import '../screens/lecturer/lecturer_approvals_screen.dart';
 import '../screens/lecturer/lecturer_create_mcq_screen.dart';
 import '../screens/lecturer/lecturer_dashboard_screen.dart';
+import '../screens/lecturer/lecturer_courses_screen.dart';
 import '../screens/lecturer/lecturer_exam_manager_screen.dart';
 import '../screens/lecturer/lecturer_profile_screen.dart';
 import '../screens/lecturer/lecturer_resources_screen.dart';
@@ -36,6 +37,9 @@ class AppRouter {
         break;
       case LecturerDashboardScreen.routeName:
         page = const LecturerDashboardScreen();
+        break;
+      case LecturerCoursesScreen.routeName:
+        page = const LecturerCoursesScreen();
         break;
       case LecturerExamManagerScreen.routeName:
         page = const LecturerExamManagerScreen();

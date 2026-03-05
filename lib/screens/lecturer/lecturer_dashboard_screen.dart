@@ -7,6 +7,7 @@ import '../../widgets/action_card.dart';
 import '../../widgets/evalis_app_bar.dart';
 import '../../widgets/resource_spotlight.dart';
 import '../lecturer/lecturer_approvals_screen.dart';
+import '../lecturer/lecturer_courses_screen.dart';
 import '../lecturer/lecturer_exam_manager_screen.dart';
 import '../lecturer/lecturer_profile_screen.dart';
 import '../lecturer/lecturer_resources_screen.dart';
@@ -40,6 +41,13 @@ class LecturerDashboardScreen extends StatelessWidget {
         icon: Icons.auto_stories_rounded,
         accent: AppTheme.accent,
         onTap: () => Navigator.pushNamed(context, LecturerResourcesScreen.routeName),
+      ),
+      ActionCardData(
+        title: context.t(AppText.lecturerCardCourses),
+        subtitle: context.t(AppText.lecturerCardCoursesDesc),
+        icon: Icons.class_outlined,
+        accent: Theme.of(context).colorScheme.tertiary,
+        onTap: () => Navigator.pushNamed(context, LecturerCoursesScreen.routeName),
       ),
       ActionCardData(
         title: context.t(AppText.lecturerProfileTitle),

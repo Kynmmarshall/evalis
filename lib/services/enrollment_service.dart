@@ -16,6 +16,31 @@ class EnrollmentService {
     return courses.whereType<Map<String, dynamic>>().map(CourseInfo.fromJson).toList();
   }
 
+  Future<void> saveCourse({
+    required String title,
+    required String lecturer,
+  }) async {
+    await _api.post('/courses', body: {
+      'title': title,
+      'lecturer': lecturer,
+    });
+  }
+
+  Future<void> updateCourse({
+    required String code,
+    required String title,
+    required String lecturer,
+  }) async {
+    await _api.put('/courses/$code', body: {
+      'title': title,
+      'lecturer': lecturer,
+    });
+  }
+
+  Future<void> deleteCourse(String code) async {
+    await _api.delete('/courses/$code');
+  }
+
   Future<List<CourseEnrollment>> fetchMyEnrollments() async {
     final response = await _api.get('/enrollments/me') as Map<String, dynamic>;
     final enrollments = response['enrollments'] as List<dynamic>? ?? [];
