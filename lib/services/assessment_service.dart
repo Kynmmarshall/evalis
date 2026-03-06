@@ -29,6 +29,22 @@ class AssessmentService {
     return ExamBrief.fromJson(response['exam'] as Map<String, dynamic>);
   }
 
+  Future<ExamBrief> updateExamSchedule({
+    required String examId,
+    required String examWindow,
+    required DateTime startAt,
+    required DateTime endAt,
+    required bool launched,
+  }) async {
+    final response = await _api.patch('/exams/$examId/schedule', body: {
+      'examWindow': examWindow,
+      'startAt': startAt.toUtc().toIso8601String(),
+      'endAt': endAt.toUtc().toIso8601String(),
+      'launched': launched,
+    }) as Map<String, dynamic>;
+    return ExamBrief.fromJson(response['exam'] as Map<String, dynamic>);
+  }
+
   Future<void> deleteExam(String id) async {
     await _api.post('/exams/$id/delete');
   }

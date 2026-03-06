@@ -5,12 +5,10 @@ import '../../l10n/app_texts.dart';
 import '../../theme.dart';
 import '../../widgets/action_card.dart';
 import '../../widgets/evalis_app_bar.dart';
-import '../../widgets/resource_spotlight.dart';
 import '../lecturer/lecturer_approvals_screen.dart';
 import '../lecturer/lecturer_courses_screen.dart';
 import '../lecturer/lecturer_exam_manager_screen.dart';
 import '../lecturer/lecturer_profile_screen.dart';
-import '../lecturer/lecturer_resources_screen.dart';
 import '../lecturer/lecturer_results_screen.dart';
 
 class LecturerDashboardScreen extends StatelessWidget {
@@ -34,13 +32,6 @@ class LecturerDashboardScreen extends StatelessWidget {
         icon: Icons.assessment_rounded,
         accent: AppTheme.secondary,
         onTap: () => Navigator.pushNamed(context, LecturerResultsScreen.routeName),
-      ),
-      ActionCardData(
-        title: context.t(AppText.lecturerCardResources),
-        subtitle: context.t(AppText.lecturerCardResourcesDesc),
-        icon: Icons.auto_stories_rounded,
-        accent: AppTheme.accent,
-        onTap: () => Navigator.pushNamed(context, LecturerResourcesScreen.routeName),
       ),
       ActionCardData(
         title: context.t(AppText.lecturerCardCourses),
@@ -82,13 +73,6 @@ class LecturerDashboardScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 16),
                 child: ActionCard(data: card),
               )),
-          const SizedBox(height: 8),
-          Text(
-            context.t(AppText.learningVault),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          const ResourceSpotlight(),
         ],
       ),
     );

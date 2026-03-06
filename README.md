@@ -10,7 +10,7 @@ Evalis is a cross-platform prototype that helps teaching teams design inclusive 
 - **Student practice loop:** Dashboards, mock exams, remediation materials, enrollment tracking, and feedback review live under [lib/screens/student](lib/screens/student) with curated data from [lib/data/mock_data.dart](lib/data/mock_data.dart).
 - **Lecturer control room:** Exam builders, approvals, analytics-ready exports, and a teaching resource vault ship from [lib/screens/lecturer](lib/screens/lecturer).
 - **Built-in localization & theming:** `AppSettings` + `L10n` toggle languages and light/dark palettes globally via [lib/app_settings.dart](lib/app_settings.dart) and [lib/l10n/app_texts.dart](lib/l10n/app_texts.dart).
-- **Composable UI kit:** Shared widgets (`EvalisAppBar`, `ActionCard`, `ResourceSpotlight`, toggles) reduce layout drift and keep screens focused on pedagogy.
+- **Composable UI kit:** Shared widgets (`EvalisAppBar`, `ActionCard`, toggles) reduce layout drift and keep screens focused on pedagogy.
 
 ## Product Tour
 
@@ -18,16 +18,14 @@ Evalis is a cross-platform prototype that helps teaching teams design inclusive 
 
 - **Mission control:** The dashboard in [lib/screens/student/student_dashboard_screen.dart](lib/screens/student/student_dashboard_screen.dart) surfaces the main actions (exams, feedback, materials, enrollments, profile).
 - **Smart exam sandbox:** [lib/screens/student/student_exam_screen.dart](lib/screens/student/student_exam_screen.dart) locks responses per question, nudges with contextual tips, and bridges to the feedback screen for remediation.
-- **Learning vault:** Materials, past drills, and difficulty tags render via [lib/screens/student/student_materials_screen.dart](lib/screens/student/student_materials_screen.dart), while ongoing enrollments and requests are handled in [lib/screens/student/student_courses_screen.dart](lib/screens/student/student_courses_screen.dart).
 - **Progress evidence:** Students review answer rationales inside [lib/screens/student/student_feedback_screen.dart](lib/screens/student/student_feedback_screen.dart) and keep their profile plus course badges current through [lib/screens/student/student_profile_screen.dart](lib/screens/student/student_profile_screen.dart).
 
 ### Lecturer Workspace
 
-- **Quick actions:** [lib/screens/lecturer/lecturer_dashboard_screen.dart](lib/screens/lecturer/lecturer_dashboard_screen.dart) aggregates exam creation, analytics, resources, approvals, and profile management.
-- **Exam lifecycle:** Configure sittings, add MCQs, and manage drafts with [lib/screens/lecturer/lecturer_exam_manager_screen.dart](lib/screens/lecturer/lecturer_exam_manager_screen.dart) and the builder at [lib/screens/lecturer/lecturer_create_mcq_screen.dart](lib/screens/lecturer/lecturer_create_mcq_screen.dart).
+- **Quick actions:** [lib/screens/lecturer/lecturer_dashboard_screen.dart](lib/screens/lecturer/lecturer_dashboard_screen.dart) aggregates exam creation, analytics, course management, approvals, and profile workflows.
+- **Exam lifecycle:** Configure sittings, add MCQs, and schedule/launch live windows with [lib/screens/lecturer/lecturer_exam_manager_screen.dart](lib/screens/lecturer/lecturer_exam_manager_screen.dart) and the builder at [lib/screens/lecturer/lecturer_create_mcq_screen.dart](lib/screens/lecturer/lecturer_create_mcq_screen.dart).
 - **Evidence & exports:** Scoreboards plus PDF generation hooks live inside [lib/screens/lecturer/lecturer_results_screen.dart](lib/screens/lecturer/lecturer_results_screen.dart) backed by [lib/services/pdf_export_service.dart](lib/services/pdf_export_service.dart).
 - **Enrollment governance:** Approve or reject student requests through [lib/screens/lecturer/lecturer_approvals_screen.dart](lib/screens/lecturer/lecturer_approvals_screen.dart) using the async flows defined in [lib/services/enrollment_service.dart](lib/services/enrollment_service.dart).
-- **Resource vault:** Curate teaching assets and future integrations via [lib/screens/lecturer/lecturer_resources_screen.dart](lib/screens/lecturer/lecturer_resources_screen.dart) and [lib/services/resource_service.dart](lib/services/resource_service.dart).
 
 ## Architecture & Design
 
@@ -39,11 +37,10 @@ Evalis is a cross-platform prototype that helps teaching teams design inclusive 
 
 ## Data & Services
 
-- Mock domain objects for courses, enrollments, exams, resources, and user profiles sit in [lib/data/mock_data.dart](lib/data/mock_data.dart). Swap this file with live providers when wiring a backend.
+- Mock domain objects for courses, enrollments, exams, and user profiles sit in [lib/data/mock_data.dart](lib/data/mock_data.dart). Swap this file with live providers when wiring a backend.
 - Lightweight async services represent integration seams:
 	- Enrollment actions → [lib/services/enrollment_service.dart](lib/services/enrollment_service.dart)
 	- PDF exports → [lib/services/pdf_export_service.dart](lib/services/pdf_export_service.dart)
-	- Resource publishing → [lib/services/resource_service.dart](lib/services/resource_service.dart)
 
 ## Getting Started
 
@@ -83,9 +80,9 @@ lib/
 		auth/                  # Login & registration flows
 		landing/               # Marketing/CTA hero
 		startup/               # Splash + boot logic
-		student/               # Student dashboards, exams, materials, profile
-		lecturer/              # Lecturer dashboards, approvals, resources, analytics
-	services/                # Enrollment, PDF export, resource actions
+			student/               # Student dashboards, exams, feedback, profile
+			lecturer/              # Lecturer dashboards, approvals, courses, analytics
+	services/                # Enrollment and export services
 	widgets/                 # Shared UI components (ActionCard, toggles, AppBar)
 ```
 

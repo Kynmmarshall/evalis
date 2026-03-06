@@ -9,14 +9,12 @@ import '../screens/lecturer/lecturer_dashboard_screen.dart';
 import '../screens/lecturer/lecturer_courses_screen.dart';
 import '../screens/lecturer/lecturer_exam_manager_screen.dart';
 import '../screens/lecturer/lecturer_profile_screen.dart';
-import '../screens/lecturer/lecturer_resources_screen.dart';
 import '../screens/lecturer/lecturer_results_screen.dart';
 import '../screens/startup/splash_screen.dart';
 import '../screens/student/student_courses_screen.dart';
 import '../screens/student/student_dashboard_screen.dart';
 import '../screens/student/student_exam_screen.dart';
 import '../screens/student/student_feedback_screen.dart';
-import '../screens/student/student_materials_screen.dart';
 import '../screens/student/student_profile_screen.dart';
 
 class AppRouter {
@@ -50,9 +48,6 @@ class AppRouter {
       case LecturerResultsScreen.routeName:
         page = const LecturerResultsScreen();
         break;
-      case LecturerResourcesScreen.routeName:
-        page = const LecturerResourcesScreen();
-        break;
       case LecturerProfileScreen.routeName:
         page = const LecturerProfileScreen();
         break;
@@ -67,9 +62,6 @@ class AppRouter {
         break;
       case StudentFeedbackScreen.routeName:
         page = const StudentFeedbackScreen();
-        break;
-      case StudentMaterialsScreen.routeName:
-        page = const StudentMaterialsScreen();
         break;
       case StudentCoursesScreen.routeName:
         page = StudentCoursesScreen();

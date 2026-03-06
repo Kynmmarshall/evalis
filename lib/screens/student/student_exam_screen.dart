@@ -251,7 +251,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              context.t(AppText.examSubtitle),
+              context.t(AppText.noLiveExams),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),

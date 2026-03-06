@@ -8,7 +8,6 @@ import '../../widgets/evalis_app_bar.dart';
 import 'student_exam_screen.dart';
 import 'student_feedback_screen.dart';
 import 'student_courses_screen.dart';
-import 'student_materials_screen.dart';
 import 'student_profile_screen.dart';
 
 class StudentDashboardScreen extends StatelessWidget {
@@ -32,13 +31,6 @@ class StudentDashboardScreen extends StatelessWidget {
         icon: Icons.bolt_rounded,
         accent: AppTheme.secondary,
         onTap: () => Navigator.pushNamed(context, StudentFeedbackScreen.routeName),
-      ),
-      ActionCardData(
-        title: context.t(AppText.studentMaterials),
-        subtitle: context.t(AppText.studentMaterialsDesc),
-        icon: Icons.menu_book_rounded,
-        accent: AppTheme.accent,
-        onTap: () => Navigator.pushNamed(context, StudentMaterialsScreen.routeName),
       ),
       ActionCardData(
         title: context.t(AppText.availableCoursesTitle),
