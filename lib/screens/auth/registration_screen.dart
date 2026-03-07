@@ -21,6 +21,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool _isSubmitting = false;
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
 
   @override
   void dispose() {
@@ -69,20 +71,37 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
-              obscureText: true,
+              obscureText: !_passwordVisible,
               decoration: InputDecoration(
                 labelText: context.t(AppText.passwordLabel),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _passwordVisible
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                  ),
+                  onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                ),
               ),
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _confirmPasswordController,
-              obscureText: true,
+              obscureText: !_confirmPasswordVisible,
               decoration: InputDecoration(
                 labelText: context.t(AppText.passwordConfirmLabel),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _confirmPasswordVisible
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                  ),
+                  onPressed: () =>
+                      setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+                ),
               ),
             ),
             const SizedBox(height: 12),

@@ -25,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _lecturerCodeController = TextEditingController();
   bool _isSubmitting = false;
+  bool _passwordVisible = false;
 
   @override
   void dispose() {
@@ -74,10 +75,18 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: !_passwordVisible,
                 decoration: InputDecoration(
                   labelText: context.t(AppText.passwordLabel),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _passwordVisible
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                    ),
+                    onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

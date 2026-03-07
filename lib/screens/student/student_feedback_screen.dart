@@ -263,6 +263,83 @@ class _ExamCard extends StatelessWidget {
   }
 }
 
+class _ExamScoreBanner extends StatelessWidget {
+  const _ExamScoreBanner({
+    required this.totalQuestions,
+    required this.answeredQuestions,
+    required this.correctAnswers,
+  });
+
+  final int totalQuestions;
+  final int answeredQuestions;
+  final int correctAnswers;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final accuracy = totalQuestions == 0 ? 0.0 : correctAnswers / totalQuestions;
+    final completion = totalQuestions == 0 ? 0.0 : answeredQuestions / totalQuestions;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.military_tech_rounded, color: colorScheme.secondary),
+                const SizedBox(width: 8),
+                Text(
+                  context.t(AppText.examScoreLabel),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                Text(
+                  '$correctAnswers / $totalQuestions',
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            LinearProgressIndicator(
+              value: accuracy,
+              minHeight: 6,
+              backgroundColor: colorScheme.surfaceVariant,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.secondary),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.task_alt_rounded, size: 18, color: colorScheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  '${context.t(AppText.examScoreAnswered)}: $answeredQuestions / $totalQuestions',
+                  style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
+                ),
+                const Spacer(),
+                Text('${(accuracy * 100).toStringAsFixed(0)}%',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.secondary,
+                    )),
+              ],
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: completion,
+              minHeight: 4,
+              backgroundColor: colorScheme.surfaceVariant,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ExamAnswersSheet extends StatefulWidget {
   const _ExamAnswersSheet({
     required this.exam,
@@ -365,14 +442,30 @@ class _ExamAnswersSheetState extends State<_ExamAnswersSheet> {
                       ),
                     );
                   }
+                  final total = questions.length;
+                  final answered =
+                      questions.where((q) => q.selectedIndex != null).length;
+                  final correct = questions
+                      .where((q) => q.selectedIndex != null && q.selectedIndex == q.correctIndex)
+                      .length;
                   return ListView.separated(
                     padding: const EdgeInsets.only(bottom: 12),
-                    itemCount: questions.length,
+                    itemCount: questions.length + 1,
                     separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) => _QuestionCard(
-                      question: questions[index],
-                      index: index,
-                    ),
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        return _ExamScoreBanner(
+                          totalQuestions: total,
+                          answeredQuestions: answered,
+                          correctAnswers: correct,
+                        );
+                      }
+                      final question = questions[index - 1];
+                      return _QuestionCard(
+                        question: question,
+                        questionNumber: index,
+                      );
+                    },
                   );
                 },
               ),
@@ -385,10 +478,10 @@ class _ExamAnswersSheetState extends State<_ExamAnswersSheet> {
 }
 
 class _QuestionCard extends StatelessWidget {
-  const _QuestionCard({required this.question, required this.index});
+  const _QuestionCard({required this.question, required this.questionNumber});
 
   final MockQuestion question;
-  final int index;
+  final int questionNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -402,7 +495,7 @@ class _QuestionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Question ${index + 1}', style: theme.textTheme.labelLarge),
+            Text('Question $questionNumber', style: theme.textTheme.labelLarge),
             const SizedBox(height: 8),
             Text(question.prompt, style: promptStyle),
             const SizedBox(height: 16),
@@ -416,6 +509,7 @@ class _QuestionCard extends StatelessWidget {
                 optionLabel: String.fromCharCode(65 + i),
                 text: question.options[i],
                 isCorrect: i == question.correctIndex,
+                isSelected: question.selectedIndex == i,
               ),
             if (question.tip.trim().isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -445,18 +539,38 @@ class _AnswerOptionTile extends StatelessWidget {
     required this.optionLabel,
     required this.text,
     required this.isCorrect,
+    required this.isSelected,
   });
 
   final String optionLabel;
   final String text;
   final bool isCorrect;
+  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final background =
-        isCorrect ? colorScheme.secondaryContainer : colorScheme.surfaceVariant;
-    final borderColor = isCorrect ? colorScheme.secondary : colorScheme.outline;
+    final theme = Theme.of(context);
+    final background = isCorrect
+        ? colorScheme.secondaryContainer
+        : isSelected
+            ? colorScheme.errorContainer
+            : colorScheme.surfaceVariant;
+    final borderColor = isCorrect
+        ? colorScheme.secondary
+        : isSelected
+            ? colorScheme.error
+            : colorScheme.outline;
+    final indicatorColor = isCorrect
+        ? colorScheme.secondary
+        : isSelected
+            ? colorScheme.error
+            : colorScheme.surface;
+    final indicatorTextColor = isCorrect
+        ? colorScheme.onSecondary
+        : isSelected
+            ? colorScheme.onError
+            : colorScheme.onSurface;
 
     return Container(
       margin: const EdgeInsets.only(top: 8),
@@ -473,17 +587,14 @@ class _AnswerOptionTile extends StatelessWidget {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: isCorrect ? colorScheme.secondary : colorScheme.surface,
+              color: indicatorColor,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(color: borderColor.withValues(alpha: 0.6)),
             ),
             alignment: Alignment.center,
             child: Text(
               optionLabel,
-              style: TextStyle(
-                color: isCorrect ? colorScheme.onSecondary : colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: indicatorTextColor, fontWeight: FontWeight.w600),
             ),
           ),
           const SizedBox(width: 12),
@@ -493,10 +604,9 @@ class _AnswerOptionTile extends StatelessWidget {
               children: [
                 Text(
                   text,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: isCorrect ? FontWeight.w600 : null),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: isCorrect ? FontWeight.w600 : null,
+                  ),
                 ),
                 if (isCorrect)
                   Padding(
@@ -508,10 +618,30 @@ class _AnswerOptionTile extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           context.t(AppText.responseCorrect),
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
+                          style: theme.textTheme.labelSmall
                               ?.copyWith(color: colorScheme.secondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (isSelected)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.person_pin_circle_rounded,
+                          size: 16,
+                          color: isCorrect ? colorScheme.secondary : colorScheme.error,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          context.t(AppText.studentAnswerLabel),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: isCorrect ? colorScheme.secondary : colorScheme.error,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),

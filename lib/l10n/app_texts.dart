@@ -28,6 +28,9 @@ enum AppText {
   resultsTitle,
   resultsSubtitle,
   resultsListTitle,
+  resultsNoSubmissions,
+  examScoreLabel,
+  examScoreAnswered,
   generatePdf,
   pdfSuccess,
     formFieldRequired,
@@ -48,8 +51,9 @@ enum AppText {
   responseLocked,
   responseCorrect,
   responseIncorrect,
+  responseSaveFailed,
+  studentAnswerLabel,
     responseReviewLater,
-    responseSaveFailed,
     correctionsBanner,
   themeToggle,
   languageLabel,
@@ -193,6 +197,9 @@ class L10n {
       AppText.resultsSubtitle:
           'Monitor completion, lock answers, then export official transcripts for your cohort.',
       AppText.resultsListTitle: 'Recent cohorts',
+        AppText.resultsNoSubmissions: 'No submissions yet. Scorecards will appear once students respond.',
+        AppText.examScoreLabel: 'Scoreboard',
+        AppText.examScoreAnswered: 'Questions answered',
       AppText.generatePdf: 'Generate PDF summary',
       AppText.pdfSuccess: 'A polished PDF will be mailed to your inbox shortly.',
     AppText.formFieldRequired: 'Fill in all required fields before continuing.',
@@ -215,9 +222,10 @@ class L10n {
       AppText.responseLocked: 'Response locked in',
       AppText.responseCorrect: 'Nice! That was the right call.',
       AppText.responseIncorrect: 'Keep at it. Review the insight shared below.',
+        AppText.responseSaveFailed: 'Unable to save your response. Please try again.',
+        AppText.studentAnswerLabel: 'Your answer',
       AppText.responseReviewLater:
           'Corrections remain hidden until Answer release opens after the scheduled end time.',
-        AppText.responseSaveFailed: 'Couldn\'t save your response. Please try again.',
       AppText.correctionsBanner:
           'Teacher-controlled release. Answers appear here only after the exam clock expires.',
       AppText.themeToggle: 'Toggle color mode',
@@ -364,6 +372,10 @@ class L10n {
       AppText.resultsSubtitle:
           'Suivez la complétion, verrouillez les réponses puis exportez les relevés officiels.',
       AppText.resultsListTitle: 'Dernières cohortes',
+        AppText.resultsNoSubmissions:
+          'Aucun envoi pour le moment. Les relevés apparaîtront dès que les étudiants auront répondu.',
+        AppText.examScoreLabel: 'Tableau de score',
+        AppText.examScoreAnswered: 'Questions répondues',
       AppText.generatePdf: 'Générer un PDF',
       AppText.pdfSuccess:
           'Un PDF finalisé sera envoyé à votre boîte mail dans un instant.',
@@ -392,10 +404,10 @@ class L10n {
       AppText.responseCorrect: 'Bravo ! C’était la bonne option.',
       AppText.responseIncorrect:
           'Encore un effort. Lisez l’explication fournie ci-dessous.',
+        AppText.responseSaveFailed: 'Impossible d’enregistrer votre réponse. Réessayez.',
+        AppText.studentAnswerLabel: 'Votre réponse',
       AppText.responseReviewLater:
           'Les corrections restent masquées jusqu’à leur publication après la fin de l’épreuve.',
-        AppText.responseSaveFailed:
-          'Impossible d’enregistrer votre réponse. Veuillez réessayer.',
       AppText.correctionsBanner:
           'Diffusion contrôlée par l’enseignant. Les réponses apparaîtront ici après la fin du temps.',
       AppText.themeToggle: 'Changer de mode de couleur',

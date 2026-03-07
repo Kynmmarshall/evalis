@@ -1,4 +1,4 @@
-import '../models/student_score.dart';
+import '../models/exam_scorebook.dart';
 import 'api_client.dart';
 
 class PdfExportService {
@@ -12,9 +12,12 @@ class PdfExportService {
     await _api.post('/scores/export');
   }
 
-  Future<List<StudentScore>> fetchScores() async {
+  Future<List<ExamScorebook>> fetchScores() async {
     final response = await _api.get('/scores') as Map<String, dynamic>;
-    final list = response['scores'] as List<dynamic>? ?? [];
-    return list.whereType<Map<String, dynamic>>().map(StudentScore.fromJson).toList(growable: false);
+    final list = response['exams'] as List<dynamic>? ?? [];
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map(ExamScorebook.fromJson)
+        .toList(growable: false);
   }
 }

@@ -159,7 +159,7 @@ class _LecturerExamManagerScreenState extends State<LecturerExamManagerScreen> {
     return Scaffold(
       appBar: EvalisAppBar(
         title: context.t(AppText.examManagerTitle),
-        showBack: false,
+        showBack: true,
       ),
       body: AnimatedSwitcher(duration: const Duration(milliseconds: 200), child: body),
     );
