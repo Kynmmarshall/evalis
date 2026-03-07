@@ -49,6 +49,7 @@ enum AppText {
   responseCorrect,
   responseIncorrect,
     responseReviewLater,
+    responseSaveFailed,
     correctionsBanner,
   themeToggle,
   languageLabel,
@@ -216,6 +217,7 @@ class L10n {
       AppText.responseIncorrect: 'Keep at it. Review the insight shared below.',
       AppText.responseReviewLater:
           'Corrections remain hidden until Answer release opens after the scheduled end time.',
+        AppText.responseSaveFailed: 'Couldn\'t save your response. Please try again.',
       AppText.correctionsBanner:
           'Teacher-controlled release. Answers appear here only after the exam clock expires.',
       AppText.themeToggle: 'Toggle color mode',
@@ -392,6 +394,8 @@ class L10n {
           'Encore un effort. Lisez l’explication fournie ci-dessous.',
       AppText.responseReviewLater:
           'Les corrections restent masquées jusqu’à leur publication après la fin de l’épreuve.',
+        AppText.responseSaveFailed:
+          'Impossible d’enregistrer votre réponse. Veuillez réessayer.',
       AppText.correctionsBanner:
           'Diffusion contrôlée par l’enseignant. Les réponses apparaîtront ici après la fin du temps.',
       AppText.themeToggle: 'Changer de mode de couleur',

@@ -15,6 +15,7 @@ class EvalisAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       leading: showBack
           ? IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),

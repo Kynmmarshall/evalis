@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
+import '../../models/exam_brief.dart';
 import '../../models/mock_question.dart';
 import '../../services/assessment_service.dart';
 import '../../services/api_client.dart';
@@ -20,7 +21,8 @@ class StudentExamScreen extends StatefulWidget {
 class _StudentExamScreenState extends State<StudentExamScreen> {
   final AssessmentService _assessmentService = AssessmentService.instance;
   List<MockQuestion> _questions = const [];
-  List<int?> _answers = const [];
+  List<int?> _answers = const <int?>[];
+  ExamBrief? _activeExam;
   bool _isLoading = true;
   String? _error;
 
@@ -36,11 +38,27 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
       _error = null;
     });
     try {
-      final questions = await _assessmentService.fetchPracticeQuestions();
+      final exams = await _assessmentService.fetchExams(state: 'live');
+      if (exams.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _activeExam = null;
+          _questions = const [];
+          _answers = const <int?>[];
+        });
+        return;
+      }
+      final currentExam = exams.first;
+      final questions = await _assessmentService.fetchQuestions(currentExam.id);
       if (!mounted) return;
       setState(() {
+        _activeExam = currentExam;
         _questions = questions;
-        _answers = List<int?>.filled(questions.length, null);
+        _answers = List<int?>.generate(
+          questions.length,
+          (index) => questions[index].selectedIndex,
+          growable: false,
+        );
       });
     } on ApiException catch (error) {
       if (!mounted) return;
@@ -49,6 +67,37 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _handleAnswerSelection(int answerIndex, MockQuestion question, int optionIndex) async {
+    final exam = _activeExam;
+    if (exam == null || answerIndex < 0 || answerIndex >= _answers.length) {
+      return;
+    }
+    if (_answers[answerIndex] != null) {
+      return;
+    }
+    setState(() {
+      _answers[answerIndex] = optionIndex;
+    });
+    try {
+      await _assessmentService.submitResponse(
+        examId: exam.id,
+        questionId: question.id,
+        optionIndex: optionIndex,
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _answers[answerIndex] = null);
+      final fallback = context.t(AppText.responseSaveFailed);
+      final message = error.message.isEmpty ? fallback : error.message;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _answers[answerIndex] = null);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.t(AppText.responseSaveFailed))));
     }
   }
 
@@ -138,9 +187,9 @@ class _StudentExamScreenState extends State<StudentExamScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: InkWell(
-                          onTap: isLocked
+                            onTap: isLocked || _activeExam == null
                               ? null
-                              : () => setState(() => _answers[index - 1] = optionIndex),
+                              : () => _handleAnswerSelection(index - 1, question, optionIndex),
                           borderRadius: BorderRadius.circular(14),
                           child: Ink(
                             decoration: BoxDecoration(

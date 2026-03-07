@@ -24,7 +24,7 @@ class ExamBrief {
       return false;
     }
     final now = DateTime.now();
-    return !now.isBefore(startAt!) && !now.isAfter(endAt!);
+    return !now.isBefore(startAt!) && now.isBefore(endAt!);
   }
 
   bool get isUpcoming {
@@ -38,7 +38,7 @@ class ExamBrief {
     if (!launched || endAt == null) {
       return false;
     }
-    return DateTime.now().isAfter(endAt!);
+    return !DateTime.now().isBefore(endAt!);
   }
 
   factory ExamBrief.fromJson(Map<String, dynamic> json) {

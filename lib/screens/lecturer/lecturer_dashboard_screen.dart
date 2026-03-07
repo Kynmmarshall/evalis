@@ -57,7 +57,10 @@ class LecturerDashboardScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: EvalisAppBar(title: context.t(AppText.lecturerDashboardTitle), showBack: true),
+      appBar: EvalisAppBar(
+        title: context.t(AppText.lecturerDashboardTitle),
+        showBack: false,
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

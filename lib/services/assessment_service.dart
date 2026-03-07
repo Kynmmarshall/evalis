@@ -1,5 +1,4 @@
 import '../models/exam_brief.dart';
-import '../models/feedback_entry.dart';
 import '../models/mock_question.dart';
 import 'api_client.dart';
 
@@ -10,11 +9,14 @@ class AssessmentService {
 
   final ApiClient _api = ApiClient.instance;
 
-  Future<List<ExamBrief>> fetchExams() async {
-    final response = await _api.get('/exams') as Map<String, dynamic>;
+  Future<List<ExamBrief>> fetchExams({String? state}) async {
+    final response = await _api.get('/exams', query: state == null ? null : {'state': state})
+        as Map<String, dynamic>;
     final list = response['exams'] as List<dynamic>? ?? [];
     return list.whereType<Map<String, dynamic>>().map(ExamBrief.fromJson).toList(growable: false);
   }
+
+  Future<List<ExamBrief>> fetchClosedExams() => fetchExams(state: 'closed');
 
   Future<ExamBrief> createExam({
     required String title,
@@ -70,17 +72,21 @@ class AssessmentService {
     });
   }
 
+  Future<void> submitResponse({
+    required String examId,
+    required String questionId,
+    required int optionIndex,
+  }) async {
+    await _api.post('/exams/$examId/questions/$questionId/response', body: {
+      'optionIndex': optionIndex,
+    });
+  }
+
   Future<List<MockQuestion>> fetchPracticeQuestions() async {
-    final exams = await fetchExams();
+    final exams = await fetchExams(state: 'live');
     if (exams.isEmpty) {
       return const [];
     }
     return fetchQuestions(exams.first.id);
-  }
-
-  Future<List<FeedbackEntry>> fetchFeedbackEntries() async {
-    final response = await _api.get('/feedback') as Map<String, dynamic>;
-    final list = response['entries'] as List<dynamic>? ?? [];
-    return list.whereType<Map<String, dynamic>>().map(FeedbackEntry.fromJson).toList(growable: false);
   }
 }
