@@ -37,6 +37,8 @@ enum AppText {
   generatePdf,
   pdfSuccess,
   pdfSavedTo,
+  viewPdf,
+  pdfOpenFailed,
     formFieldRequired,
   studentDashboardTitle,
   studentDashboardSubtitle,
@@ -210,6 +212,8 @@ class L10n {
       AppText.generatePdf: 'Generate PDF summary',
       AppText.pdfSuccess: 'A polished PDF will be mailed to your inbox shortly.',
         AppText.pdfSavedTo: 'PDF saved to',
+      AppText.viewPdf: 'View PDF',
+      AppText.pdfOpenFailed: 'Could not open the PDF. Please try again.',
     AppText.formFieldRequired: 'Fill in all required fields before continuing.',
       AppText.studentDashboardTitle: 'Student launchpad',
       AppText.studentDashboardSubtitle:
@@ -391,6 +395,8 @@ class L10n {
       AppText.pdfSuccess:
           'Un PDF finalisé sera envoyé à votre boîte mail dans un instant.',
         AppText.pdfSavedTo: 'PDF enregistré dans',
+        AppText.viewPdf: 'Ouvrir le PDF',
+        AppText.pdfOpenFailed: 'Impossible d\'ouvrir le PDF. Réessayez.',
         AppText.formFieldRequired: 'Renseignez tous les champs requis avant de continuer.',
       AppText.studentDashboardTitle: 'Plateforme étudiant',
       AppText.studentDashboardSubtitle:

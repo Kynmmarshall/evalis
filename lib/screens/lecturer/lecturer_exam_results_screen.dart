@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:open_filex/open_filex.dart';
+
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
 import '../../models/exam_scorebook.dart';
@@ -78,6 +80,7 @@ class _LecturerExamResultsScreenState extends State<LecturerExamResultsScreen> {
             isExporting: _isExporting,
             onExport: _exportPdf,
             downloadPath: _downloadPath,
+            onViewPdf: _downloadPath == null ? null : () => _openDownloadedPdf(),
           ),
           const SizedBox(height: 24),
           Text(
@@ -151,6 +154,22 @@ class _LecturerExamResultsScreenState extends State<LecturerExamResultsScreen> {
       }
     }
   }
+
+  Future<void> _openDownloadedPdf() async {
+    final path = _downloadPath;
+    if (path == null) {
+      return;
+    }
+    final result = await OpenFilex.open(path);
+    if (!mounted) {
+      return;
+    }
+    if (result.type != ResultType.done) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.t(AppText.pdfOpenFailed))),
+      );
+    }
+  }
 }
 
 class _ExamSummaryCard extends StatelessWidget {
@@ -159,12 +178,14 @@ class _ExamSummaryCard extends StatelessWidget {
     required this.isExporting,
     required this.onExport,
     this.downloadPath,
+    this.onViewPdf,
   });
 
   final ExamScorebook scorebook;
   final bool isExporting;
   final VoidCallback onExport;
   final String? downloadPath;
+  final VoidCallback? onViewPdf;
 
   @override
   Widget build(BuildContext context) {
@@ -252,6 +273,15 @@ class _ExamSummaryCard extends StatelessWidget {
               SelectableText(
                 '${context.t(AppText.pdfSavedTo)} $downloadPath',
                 style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.tonalIcon(
+                  onPressed: onViewPdf,
+                  icon: const Icon(Icons.visibility_rounded),
+                  label: Text(context.t(AppText.viewPdf)),
+                ),
               ),
             ],
           ],

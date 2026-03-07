@@ -40,12 +40,26 @@ class PdfExportService {
   }
 
   Future<Directory> _ensureScorebookDirectory() async {
-    final baseDir = await getApplicationDocumentsDirectory();
-    final scorebookDir = Directory('${baseDir.path}/scorebooks');
+    final baseDir = await _resolveDocumentsHome();
+    final scorebookDir = Directory('${baseDir.path}/Evalis/scorebooks');
     if (!await scorebookDir.exists()) {
       await scorebookDir.create(recursive: true);
     }
     return scorebookDir;
+  }
+
+  Future<Directory> _resolveDocumentsHome() async {
+    if (Platform.isAndroid) {
+      final externalDocs = await getExternalStorageDirectories(type: StorageDirectory.documents);
+      if (externalDocs != null && externalDocs.isNotEmpty) {
+        return externalDocs.first;
+      }
+      final fallbackExternal = await getExternalStorageDirectory();
+      if (fallbackExternal != null) {
+        return Directory('${fallbackExternal.path}/Documents');
+      }
+    }
+    return getApplicationDocumentsDirectory();
   }
 
   String _resolveFileName(String? disposition, String examId) {
