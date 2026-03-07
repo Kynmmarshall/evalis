@@ -8,6 +8,7 @@ import '../screens/lecturer/lecturer_create_mcq_screen.dart';
 import '../screens/lecturer/lecturer_dashboard_screen.dart';
 import '../screens/lecturer/lecturer_courses_screen.dart';
 import '../screens/lecturer/lecturer_exam_manager_screen.dart';
+import '../screens/lecturer/lecturer_exam_results_screen.dart';
 import '../screens/lecturer/lecturer_profile_screen.dart';
 import '../screens/lecturer/lecturer_results_screen.dart';
 import '../screens/startup/splash_screen.dart';
@@ -47,6 +48,17 @@ class AppRouter {
         break;
       case LecturerResultsScreen.routeName:
         page = const LecturerResultsScreen();
+        break;
+      case LecturerExamResultsScreen.routeName:
+        final args = settings.arguments;
+        if (args is LecturerExamResultsArgs) {
+          page = LecturerExamResultsScreen(
+            examId: args.examId,
+            initialScorebook: args.initialScorebook,
+          );
+        } else {
+          page = const LecturerResultsScreen();
+        }
         break;
       case LecturerProfileScreen.routeName:
         page = const LecturerProfileScreen();

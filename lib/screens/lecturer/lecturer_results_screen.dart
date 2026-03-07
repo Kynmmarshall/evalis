@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../app_settings.dart';
 import '../../l10n/app_texts.dart';
 import '../../models/exam_scorebook.dart';
-import '../../models/student_score.dart';
 import '../../services/pdf_export_service.dart';
 import '../../widgets/evalis_app_bar.dart';
+import 'lecturer_exam_results_screen.dart';
 
 class LecturerResultsScreen extends StatefulWidget {
   const LecturerResultsScreen({super.key});
@@ -20,7 +20,6 @@ class _LecturerResultsScreenState extends State<LecturerResultsScreen> {
   final PdfExportService _pdfService = PdfExportService.instance;
   List<ExamScorebook> _scorebooks = const [];
   bool _isLoading = true;
-  bool _isExporting = false;
   String? _error;
 
   @override
@@ -48,18 +47,6 @@ class _LecturerResultsScreenState extends State<LecturerResultsScreen> {
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 16),
-            FilledButton.icon(
-              icon: const Icon(Icons.picture_as_pdf_rounded),
-              onPressed: _isExporting
-                  ? null
-                  : () {
-                      _exportPdf();
-                    },
-              label: _isExporting
-                  ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(context.t(AppText.generatePdf)),
-            ),
-            const SizedBox(height: 24),
             Text(
               context.t(AppText.resultsListTitle),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -71,7 +58,10 @@ class _LecturerResultsScreenState extends State<LecturerResultsScreen> {
               ..._scorebooks.map(
                 (book) => Padding(
                   padding: const EdgeInsets.only(bottom: 20),
-                  child: _ExamScoreCard(scorebook: book),
+                  child: _ExamScoreCard(
+                    scorebook: book,
+                    onTap: () => _openScorebook(book),
+                  ),
                 ),
               ),
           ],
@@ -104,22 +94,15 @@ class _LecturerResultsScreenState extends State<LecturerResultsScreen> {
     }
   }
 
-  Future<void> _exportPdf() async {
-    setState(() => _isExporting = true);
-    try {
-      await _pdfService.generateSummary();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(context.t(AppText.pdfSuccess))));
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error.toString())));
-    } finally {
-      if (mounted) {
-        setState(() => _isExporting = false);
-      }
-    }
+  void _openScorebook(ExamScorebook scorebook) {
+    Navigator.pushNamed(
+      context,
+      LecturerExamResultsScreen.routeName,
+      arguments: LecturerExamResultsArgs(
+        examId: scorebook.examId,
+        initialScorebook: scorebook,
+      ),
+    );
   }
 }
 
@@ -175,9 +158,10 @@ class _EmptyScores extends StatelessWidget {
 }
 
 class _ExamScoreCard extends StatelessWidget {
-  const _ExamScoreCard({required this.scorebook});
+  const _ExamScoreCard({required this.scorebook, required this.onTap});
 
   final ExamScorebook scorebook;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -242,95 +226,18 @@ class _ExamScoreCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Divider(height: 1, color: colorScheme.surfaceVariant),
-            const SizedBox(height: 16),
-            if (scorebook.students.isEmpty)
-              Text(
-                context.t(AppText.resultsNoSubmissions),
-                style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.outline),
-              )
-            else
-              Column(
-                children: [
-                  for (final score in scorebook.students)
-                    _StudentScoreRow(
-                      score: score,
-                      totalQuestions: scorebook.questionCount,
-                    ),
-                ],
-              ),
+            Text(
+              '${scorebook.students.length} ${context.t(AppText.resultsStudentCount)}',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onTap,
+              icon: const Icon(Icons.chevron_right_rounded),
+              label: Text(context.t(AppText.resultsViewDetails)),
+            ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _StudentScoreRow extends StatelessWidget {
-  const _StudentScoreRow({required this.score, required this.totalQuestions});
-
-  final StudentScore score;
-  final int totalQuestions;
-
-  double get _accuracy => totalQuestions == 0 ? 0 : score.correctAnswers / totalQuestions;
-  double get _completion => totalQuestions == 0 ? 0 : score.answeredQuestions / totalQuestions;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  score.name,
-                  style:
-                      theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ),
-              Text(
-                '${score.correctAnswers} / $totalQuestions',
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          LinearProgressIndicator(
-            value: _accuracy,
-            minHeight: 6,
-            backgroundColor: colorScheme.surfaceVariant,
-            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(Icons.task_alt_rounded, size: 16, color: colorScheme.outline),
-              const SizedBox(width: 4),
-              Text(
-                '${context.t(AppText.examScoreAnswered)}: '
-                '${score.answeredQuestions} / $totalQuestions',
-                style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.outline),
-              ),
-              const Spacer(),
-              Text(
-                '${(_accuracy * 100).toStringAsFixed(0)}%',
-                style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: _completion,
-            minHeight: 4,
-            backgroundColor: colorScheme.surfaceVariant,
-            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.secondary),
-          ),
-        ],
       ),
     );
   }

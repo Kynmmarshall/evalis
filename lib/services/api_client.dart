@@ -51,6 +51,26 @@ class ApiClient {
     return _decode(response);
   }
 
+  Future<http.Response> getRaw(String path, {Map<String, String>? query}) async {
+    final uri = _buildUri(path, query);
+    final response = await _http.get(uri, headers: _headers(contentType: false));
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response;
+    }
+    dynamic body;
+    if (response.body.isNotEmpty) {
+      try {
+        body = jsonDecode(response.body);
+      } catch (_) {
+        body = response.body;
+      }
+    }
+    final message = body is Map<String, dynamic>
+        ? (body['message']?.toString() ?? 'Request failed')
+        : (body is String && body.isNotEmpty ? body : 'Request failed');
+    throw ApiException(message, statusCode: response.statusCode);
+  }
+
   Future<dynamic> put(String path, {Object? body}) async {
     final response = await _http.put(
       _buildUri(path),
